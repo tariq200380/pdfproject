@@ -105,6 +105,50 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
     }
   };
 
+  const getCategoryBadge = (c: ConverterConfig): string => {
+    if (c.badge) return c.badge;
+    switch (c.id) {
+      case 'word-to-pdf':
+        return 'Office';
+      case 'excel-to-pdf':
+        return 'Spreadsheet';
+      case 'ppt-to-pdf':
+        return 'Presentation';
+      case 'jpg-to-pdf':
+      case 'png-to-pdf':
+      case 'bmp-to-pdf':
+        return 'Image';
+      case 'text-to-pdf':
+        return 'Text';
+      case 'rtf-to-pdf':
+        return 'Rich Text';
+      case 'image-to-pdf':
+        return 'Multi-Image';
+      case 'tiff-to-pdf':
+        return 'TIFF';
+      case 'gif-to-pdf':
+        return 'Animation';
+      case 'pdf-to-word':
+        return 'DOCX';
+      case 'pdf-to-excel':
+        return 'XLSX';
+      case 'pdf-to-ppt':
+        return 'PPTX';
+      case 'pdf-to-jpg':
+        return 'JPG';
+      case 'pdf-to-png':
+        return 'PNG';
+      case 'smart-pdf':
+        return 'All Formats';
+      case 'universal-converter':
+        return 'Universal';
+      case 'ocr-pdf':
+        return 'Searchable OCR';
+      default:
+        return 'Document';
+    }
+  };
+
   const handleOpenModal = (converter: ConverterConfig) => {
     setActiveConverter(converter);
     setSelectedFiles([]);
@@ -289,33 +333,37 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
       </div>
 
       {/* 23 Converters Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))',
-        gap: '20px',
-      }}>
+      <div
+        className="adobe-converters-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch"
+        style={{
+          display: 'grid',
+          gap: '24px',
+          alignItems: 'stretch',
+        }}
+      >
         {filteredConverters.map((c) => {
           const style = getIconStyles(c.iconType);
           return (
             <div
               key={c.id}
               onClick={() => handleOpenModal(c)}
-              className="adobe-tool-card"
+              className="adobe-converter-card h-full flex flex-col justify-between border border-slate-200 hover:border-slate-300 rounded-xl p-6"
               style={{
                 backgroundColor: '#ffffff',
                 border: '1px solid #e2e8f0',
                 borderRadius: '12px',
                 padding: '24px',
-                cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
+                height: '100%',
+                cursor: 'pointer',
                 transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
               }}
             >
               <div>
-                {/* Header with Icon & Optional Badge */}
+                {/* Header with Icon & Clean Subtle Badge */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                   <div style={{
                     width: '44px',
@@ -331,24 +379,23 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                     {getIcon(c.iconType)}
                   </div>
 
-                  {c.badge && (
-                    <span style={{
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      backgroundColor: '#f1f5f9',
-                      color: '#475569',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      border: '1px solid #cbd5e1',
-                    }}>
-                      {c.badge}
-                    </span>
-                  )}
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    backgroundColor: '#f1f5f9',
+                    color: '#475569',
+                    padding: '3px 10px',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    letterSpacing: '0.02em',
+                  }}>
+                    {getCategoryBadge(c)}
+                  </span>
                 </div>
 
                 {/* Converter Title */}
                 <h4 style={{
-                  fontSize: '17px',
+                  fontSize: '16px',
                   fontWeight: 800,
                   color: '#0f172a',
                   letterSpacing: '-0.02em',
@@ -357,50 +404,47 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                   {c.title}
                 </h4>
 
-                {/* Converter Description */}
-                <p style={{
-                  fontSize: '13px',
-                  color: '#64748b',
-                  lineHeight: 1.5,
-                  margin: 0,
-                  marginBottom: '16px',
-                }}>
+                {/* Converter Description with line-clamp-2 */}
+                <p
+                  className="line-clamp-2"
+                  style={{
+                    fontSize: '13px',
+                    color: '#64748b',
+                    lineHeight: 1.5,
+                    margin: 0,
+                    marginBottom: '20px',
+                  }}
+                >
                   {c.description}
                 </p>
               </div>
 
-              {/* Bottom Action Section */}
-              <div>
-                <div style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#94a3b8',
-                  marginBottom: '12px',
-                }}>
-                  Accepts: <span style={{ color: '#475569', fontFamily: 'monospace' }}>{c.accept}</span>
-                </div>
-
+              {/* Adobe Acrobat Signature Pill Button aligned to bottom-left */}
+              <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-start' }}>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleOpenModal(c);
                   }}
-                  className="btn btn-secondary"
+                  className="adobe-pill-button rounded-full border border-slate-900 text-slate-900 font-semibold text-xs px-5 py-2 hover:bg-slate-900 hover:text-white transition-all inline-flex items-center justify-center self-start mt-auto"
                   style={{
-                    width: '100%',
-                    justifyContent: 'center',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    padding: '8px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
+                    borderRadius: '9999px',
+                    border: '1px solid #0f172a',
                     color: '#0f172a',
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    padding: '8px 20px',
+                    backgroundColor: 'transparent',
+                    transition: 'all 0.18s ease',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    alignSelf: 'flex-start',
+                    cursor: 'pointer',
                   }}
                 >
-                  Convert Now
-                  <ArrowRight size={14} />
+                  Try for free
                 </button>
               </div>
             </div>
