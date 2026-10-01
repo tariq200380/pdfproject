@@ -45,6 +45,13 @@ async def convert_audio_endpoint(
     sample_rate: Optional[int] = Form(None),
 ):
     """Transcodes uploaded audio into target format (MP3, WAV, AAC, FLAC, OGG, M4A)."""
+    if not isinstance(target_format, str):
+        target_format = str(getattr(target_format, "default", target_format))
+    if not isinstance(bitrate, str):
+        bitrate = str(getattr(bitrate, "default", "192k") or "192k")
+    if not isinstance(sample_rate, int) and sample_rate is not None:
+        sample_rate = getattr(sample_rate, "default", None)
+
     fmt = validate_allowlist(target_format.lstrip("."), ALLOWED_AUDIO_FORMATS, "target_format")
     if bitrate:
         bitrate = validate_allowlist(bitrate, ALLOWED_AUDIO_BITRATES, "bitrate")
@@ -86,6 +93,11 @@ async def convert_video_endpoint(
     resolution: Optional[str] = Form("original"),  # original, 1080p, 720p, 480p
 ):
     """Transcodes uploaded video into target container and resolution."""
+    if not isinstance(target_format, str):
+        target_format = str(getattr(target_format, "default", target_format))
+    if not isinstance(resolution, str):
+        resolution = str(getattr(resolution, "default", "original") or "original")
+
     fmt = validate_allowlist(target_format.lstrip("."), ALLOWED_VIDEO_FORMATS, "target_format")
     if resolution:
         resolution = validate_allowlist(resolution, ALLOWED_VIDEO_RESOLUTIONS, "resolution")
@@ -112,34 +124,50 @@ async def convert_video_endpoint(
 
     background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
     safe_stem = sanitize_filename(Path(file.filename or "video").stem, "video")
+    media_type = (
+        "image/gif"
+        if fmt == "gif"
+        else ("audio/mpeg" if fmt == "mp3" else "application/octet-stream")
+    )
     return FileResponse(
         path=out_path,
         filename=f"converted_{safe_stem}.{fmt}",
-        media_type="application/octet-stream",
+        media_type=media_type,
     )
 
 
 @router.post("/images-to-pdf")
+@router.post("/image-to-pdf")
 async def convert_images_to_pdf_endpoint(
     background_tasks: BackgroundTasks,
-    files: List[UploadFile] = File(...),
+    files: Optional[List[UploadFile]] = File(None),
+    file: Optional[UploadFile] = File(None),
 ):
     """Combines one or more uploaded images into a multi-page PDF."""
-    if not files:
+    upload_list: List[UploadFile] = []
+    if files:
+        upload_list.extend(files)
+    if file and file not in upload_list:
+        upload_list.append(file)
+
+    if not upload_list:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="At least one image is required")
 
     session_id, session_dir = sandbox_manager.create_session()
     saved_paths: List[Path] = []
 
-    for i, file in enumerate(files):
-        ext = Path(file.filename).suffix if file.filename else ".png"
+    for i, f in enumerate(upload_list):
+        ext = Path(f.filename).suffix if f.filename else ".png"
         fpath = session_dir / f"img_{i}{ext}"
-        content = await file.read()
+        content = await f.read()
         if len(content) == 0:
-            sandbox_manager.cleanup_session(session_id)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Uploaded image '{file.filename}' is empty")
+            continue
         fpath.write_bytes(content)
         saved_paths.append(fpath)
+
+    if not saved_paths:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="All uploaded images were empty")
 
     pdf_out = session_dir / "converted_images.pdf"
     try:
@@ -231,4 +259,27 @@ async def convert_image_format_endpoint(
         path=out_path,
         filename=f"converted_{safe_stem}.{fmt}",
         media_type=f"image/{fmt}",
+    )
+
+
+@router.post("/file")
+@router.post("/media/convert")
+async def universal_media_convert_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    target_format: str = Form(...),
+):
+    """Unified file converter for audio, video, images, or documents."""
+    fmt = target_format.lower().lstrip(".")
+    if fmt in ALLOWED_AUDIO_FORMATS:
+        return await convert_audio_endpoint(background_tasks, file=file, target_format=fmt, bitrate="192k", sample_rate=None)
+    if fmt in ALLOWED_VIDEO_FORMATS:
+        return await convert_video_endpoint(background_tasks, file=file, target_format=fmt, resolution="original")
+    if fmt in ALLOWED_IMAGE_FORMATS:
+        return await convert_image_format_endpoint(background_tasks, file=file, target_format=fmt)
+    if fmt == "pdf":
+        return await convert_images_to_pdf_endpoint(background_tasks, files=[file])
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"Unsupported target format: '{target_format}'",
     )

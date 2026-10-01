@@ -6,7 +6,8 @@ import logging
 from pathlib import Path
 from typing import List, Union
 import pymupdf
-from PIL import Image
+from PIL import Image, ImageOps, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 try:
     import pillow_heif
     pillow_heif.register_heif_opener()
@@ -45,8 +46,9 @@ class ImageEngine:
                     img_doc.close()
                     img_pdf.close()
                 except Exception:
-                    # Fall back to Pillow conversion (e.g. for HEIC or non-standard formats)
+                    # Fall back to Pillow conversion (e.g. for HEIC, WhatsApp JPG, or non-standard formats)
                     with Image.open(src_path) as pil_img:
+                        pil_img = ImageOps.exif_transpose(pil_img)
                         rgb_img = pil_img.convert("RGB")
                         buf = io.BytesIO()
                         rgb_img.save(buf, format="JPEG", quality=95)

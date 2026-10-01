@@ -369,6 +369,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const [reverseOrder, setReverseOrder] = useState(false);
   const [signatureName, setSignatureName] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
+  const [targetFormat, setTargetFormat] = useState<string>('mp3');
 
   // Canvas ref for Fill & Sign
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -440,6 +441,17 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     setProtectPassword('');
     setShowPassword(false);
     setHasDrawnSignature(false);
+
+    // Initialize smart default target format
+    const initialFile = stagedPdfFile && tool.section !== 'convert' ? stagedPdfFile : null;
+    const initialExt = initialFile?.name.split('.').pop()?.toLowerCase() || '';
+    if (tool.id === 'convert-audio') {
+      setTargetFormat(initialExt === 'mp3' ? 'wav' : 'mp3');
+    } else if (tool.id === 'convert-video') {
+      setTargetFormat(initialExt === 'mp4' ? 'mkv' : 'mp4');
+    } else if (tool.id === 'pdf-to-images') {
+      setTargetFormat('jpg');
+    }
   };
 
   const handleCloseModal = () => {
@@ -461,6 +473,13 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
       const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages' || activeModalTool?.id === 'images-to-pdf';
       setModalFiles(isMultiple ? files : [files[0]]);
       setErrorMessage(null);
+
+      const firstExt = files[0]?.name.split('.').pop()?.toLowerCase() || '';
+      if (activeModalTool?.id === 'convert-audio') {
+        setTargetFormat(firstExt === 'mp3' ? 'wav' : 'mp3');
+      } else if (activeModalTool?.id === 'convert-video') {
+        setTargetFormat(firstExt === 'mp4' ? 'mkv' : 'mp4');
+      }
     }
   };
 
@@ -478,6 +497,13 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
       const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages' || activeModalTool?.id === 'images-to-pdf';
       setModalFiles(isMultiple ? files : [files[0]]);
       setErrorMessage(null);
+
+      const firstExt = files[0]?.name.split('.').pop()?.toLowerCase() || '';
+      if (activeModalTool?.id === 'convert-audio') {
+        setTargetFormat(firstExt === 'mp3' ? 'wav' : 'mp3');
+      } else if (activeModalTool?.id === 'convert-video') {
+        setTargetFormat(firstExt === 'mp4' ? 'mkv' : 'mp4');
+      }
     }
   };
 
@@ -643,16 +669,34 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         }
 
         case 'pdf-to-images': {
-          resultBlob = await pdfApiClient.burstPdf(primaryFile);
-          filename = `${stem}_pages.zip`;
+          const selectedFormat = targetFormat || 'jpg';
+          const formData = new FormData();
+          formData.append('file', primaryFile);
+          formData.append('target_format', selectedFormat);
+          formData.append('dpi', '150');
+          const res = await fetch('/api/convert/pdf-to-images', { method: 'POST', body: formData });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'PDF to images conversion failed' }));
+            throw new Error(err.detail || 'PDF to images conversion failed');
+          }
+          resultBlob = await res.blob();
+          const contentType = res.headers.get('content-type') || '';
+          const isZip = contentType.includes('zip') || selectedFormat !== 'svg';
+          filename = `${stem}_pages.${isZip ? 'zip' : selectedFormat}`;
           break;
         }
 
         case 'images-to-pdf': {
           const formData = new FormData();
           modalFiles.forEach((f) => formData.append('files', f));
-          const res = await fetch('/api/media/images-to-pdf', { method: 'POST', body: formData });
-          if (!res.ok) throw new Error('Image to PDF conversion failed');
+          if (modalFiles.length === 1) {
+            formData.append('file', modalFiles[0]);
+          }
+          const res = await fetch('/api/convert/images-to-pdf', { method: 'POST', body: formData });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Image to PDF conversion failed' }));
+            throw new Error(err.detail || 'Image to PDF conversion failed');
+          }
           resultBlob = await res.blob();
           filename = `${stem}.pdf`;
           break;
@@ -662,31 +706,42 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           const formData = new FormData();
           formData.append('file', primaryFile);
           const res = await fetch('/api/compress/pdf', { method: 'POST', body: formData });
-          if (!res.ok) throw new Error('PDF compression failed');
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'PDF compression failed' }));
+            throw new Error(err.detail || 'PDF compression failed');
+          }
           resultBlob = await res.blob();
           filename = `${stem}_compressed.pdf`;
           break;
         }
 
         case 'convert-video': {
+          const selectedFormat = targetFormat || 'mp4';
           const formData = new FormData();
           formData.append('file', primaryFile);
-          formData.append('target_format', 'mp4');
-          const res = await fetch('/api/media/transcode/video', { method: 'POST', body: formData });
-          if (!res.ok) throw new Error('Video conversion failed');
+          formData.append('target_format', selectedFormat);
+          const res = await fetch('/api/convert/video', { method: 'POST', body: formData });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Video conversion failed' }));
+            throw new Error(err.detail || 'Video conversion failed');
+          }
           resultBlob = await res.blob();
-          filename = `${stem}.mp4`;
+          filename = `${stem}.${selectedFormat}`;
           break;
         }
 
         case 'convert-audio': {
+          const selectedFormat = targetFormat || 'mp3';
           const formData = new FormData();
           formData.append('file', primaryFile);
-          formData.append('target_format', 'mp3');
-          const res = await fetch('/api/media/transcode/audio', { method: 'POST', body: formData });
-          if (!res.ok) throw new Error('Audio conversion failed');
+          formData.append('target_format', selectedFormat);
+          const res = await fetch('/api/convert/audio', { method: 'POST', body: formData });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Audio conversion failed' }));
+            throw new Error(err.detail || 'Audio conversion failed');
+          }
           resultBlob = await res.blob();
-          filename = `${stem}.mp3`;
+          filename = `${stem}.${selectedFormat}`;
           break;
         }
 
@@ -694,7 +749,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           const formData = new FormData();
           formData.append('file', primaryFile);
           const res = await fetch('/api/compress/video', { method: 'POST', body: formData });
-          if (!res.ok) throw new Error('Video compression failed');
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Video compression failed' }));
+            throw new Error(err.detail || 'Video compression failed');
+          }
           resultBlob = await res.blob();
           filename = `${stem}_compressed.mp4`;
           break;
@@ -704,7 +762,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           const formData = new FormData();
           formData.append('file', primaryFile);
           const res = await fetch('/api/compress/audio', { method: 'POST', body: formData });
-          if (!res.ok) throw new Error('Audio compression failed');
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Audio compression failed' }));
+            throw new Error(err.detail || 'Audio compression failed');
+          }
           resultBlob = await res.blob();
           filename = `${stem}_compressed.mp3`;
           break;
@@ -714,7 +775,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           const formData = new FormData();
           formData.append('file', primaryFile);
           const res = await fetch('/api/compress/image', { method: 'POST', body: formData });
-          if (!res.ok) throw new Error('Image compression failed');
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Image compression failed' }));
+            throw new Error(err.detail || 'Image compression failed');
+          }
           resultBlob = await res.blob();
           filename = `${stem}_compressed.webp`;
           break;
@@ -1195,6 +1259,124 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
               ) : null}
 
               {/* TOOL SPECIFIC CONTROLS */}
+              {/* Universal Audio Converter Target Format Selector */}
+              {activeModalTool.id === 'convert-audio' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '8px' }}>
+                    Convert to format:
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {(['mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg'] as const).map((fmt) => (
+                      <button
+                        key={fmt}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setTargetFormat(fmt);
+                        }}
+                        style={{
+                          padding: '7px 16px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: targetFormat === fmt ? 700 : 500,
+                          border: targetFormat === fmt ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                          backgroundColor: targetFormat === fmt ? '#0f172a' : '#ffffff',
+                          color: targetFormat === fmt ? '#ffffff' : '#334155',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {fmt.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Universal Video Converter Target Format Selector */}
+              {activeModalTool.id === 'convert-video' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '8px' }}>
+                    Convert to format:
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {[
+                      { id: 'mp4', label: 'MP4' },
+                      { id: 'mkv', label: 'MKV' },
+                      { id: 'avi', label: 'AVI' },
+                      { id: 'webm', label: 'WEBM' },
+                      { id: 'mov', label: 'MOV' },
+                      { id: 'gif', label: 'GIF Animation' },
+                      { id: 'mp3', label: 'MP3 (Audio Extraction)' },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setTargetFormat(item.id);
+                        }}
+                        style={{
+                          padding: '7px 16px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: targetFormat === item.id ? 700 : 500,
+                          border: targetFormat === item.id ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                          backgroundColor: targetFormat === item.id ? '#0f172a' : '#ffffff',
+                          color: targetFormat === item.id ? '#ffffff' : '#334155',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* PDF to Images Format Selector */}
+              {activeModalTool.id === 'pdf-to-images' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '8px' }}>
+                    Render pages as format:
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {[
+                      { id: 'jpg', label: 'JPG' },
+                      { id: 'png', label: 'PNG' },
+                      { id: 'webp', label: 'WEBP' },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setTargetFormat(item.id);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '8px',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: targetFormat === item.id ? 700 : 500,
+                          border: targetFormat === item.id ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                          backgroundColor: targetFormat === item.id ? '#0f172a' : '#ffffff',
+                          color: targetFormat === item.id ? '#ffffff' : '#334155',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* 1. Protect PDF Password Input */}
               {activeModalTool.id === 'protect-pdf' && (
                 <div style={{ marginBottom: '20px' }}>
@@ -1543,7 +1725,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     </div>
                   </div>
                   <button
-                    onClick={() => pdfApiClient.triggerBrowserDownload(downloadBlob.blob, downloadBlob.filename)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      pdfApiClient.triggerBrowserDownload(downloadBlob.blob, downloadBlob.filename);
+                    }}
                     className="btn btn-secondary"
                     style={{
                       padding: '6px 12px',

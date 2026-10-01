@@ -18,7 +18,8 @@ import pymupdf
 from docx import Document
 from fpdf import FPDF
 from pdf2docx import Converter
-from PIL import Image, ImageSequence
+from PIL import Image, ImageOps, ImageFile, ImageSequence
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 import pillow_heif
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -372,6 +373,7 @@ class UniversalConvertersService:
         pil_images = []
         for path in src_images:
             im = Image.open(path)
+            im = ImageOps.exif_transpose(im)
             if im.mode != "RGB":
                 im = im.convert("RGB")
             pil_images.append(im)

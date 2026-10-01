@@ -129,27 +129,32 @@ class FFmpegService:
             args += ["-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p"]
         elif fmt == "avi":
             args += ["-c:v", "mpeg4", "-c:a", "libmp3lame"]
+        elif fmt == "gif":
+            args += ["-vf", "fps=10,scale='min(480,iw)':-1:flags=lanczos"]
+        elif fmt == "mp3":
+            args += ["-vn", "-c:a", "libmp3lame", "-b:a", "192k"]
         else:
             raise ValueError(f"Unsupported video target format: {fmt}")
 
-        # CRF / Quality
-        if opts.crf is not None:
-            args += ["-crf", str(opts.crf)]
-        if opts.preset and fmt in ("mp4", "mkv", "mov"):
-            args += ["-preset", opts.preset]
+        if fmt not in ("gif", "mp3"):
+            # CRF / Quality
+            if opts.crf is not None:
+                args += ["-crf", str(opts.crf)]
+            if opts.preset and fmt in ("mp4", "mkv", "mov"):
+                args += ["-preset", opts.preset]
 
-        # Audio bitrate
-        if opts.audio_bitrate and fmt != "avi":
-            args += ["-b:a", opts.audio_bitrate]
+            # Audio bitrate
+            if opts.audio_bitrate and fmt != "avi":
+                args += ["-b:a", opts.audio_bitrate]
 
-        # Resolution scaling
-        res = (opts.resolution or "original").lower()
-        if res == "1080p":
-            args += ["-vf", "scale='min(1920,iw)':-2"]
-        elif res == "720p":
-            args += ["-vf", "scale='min(1280,iw)':-2"]
-        elif res == "480p":
-            args += ["-vf", "scale='min(854,iw)':-2"]
+            # Resolution scaling
+            res = (opts.resolution or "original").lower()
+            if res == "1080p":
+                args += ["-vf", "scale='min(1920,iw)':-2"]
+            elif res == "720p":
+                args += ["-vf", "scale='min(1280,iw)':-2"]
+            elif res == "480p":
+                args += ["-vf", "scale='min(854,iw)':-2"]
 
         args.append(str(out_file))
         await self.run_command(args)

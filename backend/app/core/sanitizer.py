@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 
 ALLOWED_AUDIO_FORMATS = {"mp3", "wav", "aac", "flac", "ogg", "m4a"}
 ALLOWED_AUDIO_BITRATES = {"64k", "96k", "128k", "192k", "256k", "320k"}
-ALLOWED_VIDEO_FORMATS = {"mp4", "mkv", "avi", "webm", "mov"}
+ALLOWED_VIDEO_FORMATS = {"mp4", "mkv", "avi", "webm", "mov", "gif", "mp3"}
 ALLOWED_VIDEO_RESOLUTIONS = {"original", "1080p", "720p", "480p"}
 ALLOWED_IMAGE_FORMATS = {"png", "jpg", "jpeg", "webp", "svg"}
 ALLOWED_COMPRESS_PRESETS = {"high_quality", "max_compression", "lossless"}
