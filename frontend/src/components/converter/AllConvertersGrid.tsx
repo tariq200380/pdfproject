@@ -202,10 +202,47 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
     }
   };
 
+  const validateConverterFiles = (files: File[], converter: ConverterConfig): { valid: boolean; error?: string } => {
+    if (converter.id === 'universal-converter' || converter.accept === '*/*') {
+      return { valid: true };
+    }
+    const acceptedTokens = converter.accept.toLowerCase().split(',').map((t) => t.trim());
+    const acceptedExts = acceptedTokens.filter((t) => t.startsWith('.'));
+    const acceptedMimes = acceptedTokens.filter((t) => !t.startsWith('.'));
+
+    for (const f of files) {
+      const ext = '.' + (f.name.split('.').pop()?.toLowerCase() || '');
+      const mime = f.type.toLowerCase();
+
+      const extMatch = acceptedExts.some((e) => e === ext);
+      const mimeMatch = acceptedMimes.some((m) => {
+        if (m.endsWith('/*')) {
+          const prefix = m.replace('/*', '');
+          return mime.startsWith(prefix);
+        }
+        return m === mime;
+      });
+
+      if (!extMatch && !mimeMatch && f.type !== '') {
+        return {
+          valid: false,
+          error: `"${f.name}" is not supported by ${converter.title}. Please select a valid file (${getFormattedAcceptedList(converter.accept)}).`,
+        };
+      }
+    }
+    return { valid: true };
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files && e.target.files.length > 0 && activeConverter) {
       const filesArray = Array.from(e.target.files);
-      setSelectedFiles(activeConverter?.multiple ? filesArray : [filesArray[0]]);
+      const validation = validateConverterFiles(filesArray, activeConverter);
+      if (!validation.valid) {
+        setErrorMessage(validation.error || 'Invalid file format');
+        e.target.value = '';
+        return;
+      }
+      setSelectedFiles(activeConverter.multiple ? filesArray : [filesArray[0]]);
       setErrorMessage(null);
     }
     // Always reset input value so selecting the same file consecutively triggers onChange
@@ -215,9 +252,14 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (isProcessing) return;
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && activeConverter) {
       const filesArray = Array.from(e.dataTransfer.files);
-      setSelectedFiles(activeConverter?.multiple ? filesArray : [filesArray[0]]);
+      const validation = validateConverterFiles(filesArray, activeConverter);
+      if (!validation.valid) {
+        setErrorMessage(validation.error || 'Invalid file format');
+        return;
+      }
+      setSelectedFiles(activeConverter.multiple ? filesArray : [filesArray[0]]);
       setErrorMessage(null);
     }
   };
@@ -706,7 +748,6 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept={activeConverter.id === 'universal-converter' ? undefined : activeConverter.accept}
                     multiple={Boolean(activeConverter.multiple)}
                     onChange={handleFileChange}
                     style={{ display: 'none' }}

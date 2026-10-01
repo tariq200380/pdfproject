@@ -395,28 +395,6 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     })
     .filter((sec) => sec.tools.length > 0);
 
-  const getAcceptedFormats = (): string | undefined => {
-    if (!activeModalTool) return undefined;
-    // For video and audio tools, return undefined so no restrictive accept attribute is attached,
-    // preventing Ubuntu/GTK dialogs from hiding valid media files behind "Custom Files".
-    if (
-      activeModalTool.id === 'convert-video' ||
-      activeModalTool.id === 'compress-video' ||
-      activeModalTool.id === 'convert-audio' ||
-      activeModalTool.id === 'compress-audio' ||
-      activeModalTool.id.includes('video') ||
-      activeModalTool.id.includes('audio') ||
-      activeModalTool.id.includes('media') ||
-      activeModalTool.id.includes('universal')
-    ) {
-      return undefined;
-    }
-    if (activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'compress-image') {
-      return 'image/*,.png,.jpg,.jpeg,.webp,.heic,.heif,.bmp,.tiff,.tif,.gif,*';
-    }
-    return '.pdf,application/pdf';
-  };
-
   const validateSelectedFiles = (files: File[], toolId: string): { valid: boolean; error?: string } => {
     if (files.length === 0) return { valid: false, error: 'No file selected.' };
 
@@ -433,19 +411,19 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
       const ext = f.name.split('.').pop()?.toLowerCase() || '';
       if (isVideoTool) {
         if (!f.type.startsWith('video/') && !videoExts.has(ext) && f.type !== '') {
-          return { valid: false, error: `"${f.name}" does not appear to be a video file. Please select a valid video (.mp4, .mkv, .avi, .mov, .webm, etc.).` };
+          return { valid: false, error: `Please select a valid video file (.mp4, .mkv, .avi, etc.).` };
         }
       } else if (isAudioTool) {
         if (!f.type.startsWith('audio/') && !audioExts.has(ext) && f.type !== '') {
-          return { valid: false, error: `"${f.name}" does not appear to be an audio file. Please select a valid audio (.mp3, .wav, .aac, .m4a, .flac, .ogg, etc.).` };
+          return { valid: false, error: `Please select a valid audio file (.mp3, .wav, .aac, .m4a, .flac, .ogg, etc.).` };
         }
       } else if (isImageTool) {
         if (!f.type.startsWith('image/') && !imageExts.has(ext) && f.type !== '') {
-          return { valid: false, error: `"${f.name}" does not appear to be an image file. Please select an image (.jpg, .png, .webp, .heic, etc.).` };
+          return { valid: false, error: `Please select a valid image file (.jpg, .png, .webp, .heic, etc.).` };
         }
       } else if (isPdfTool) {
         if (f.type !== 'application/pdf' && ext !== 'pdf' && f.type !== '') {
-          return { valid: false, error: `"${f.name}" is not a PDF file. Please select a valid PDF document (.pdf).` };
+          return { valid: false, error: `Please select a valid PDF file (.pdf).` };
         }
       }
     }
@@ -1262,7 +1240,6 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept={getAcceptedFormats()}
                       multiple={
                         activeModalTool.id === 'merge-pdf' ||
                         activeModalTool.id === 'insert-pages' ||
