@@ -394,27 +394,30 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     })
     .filter((sec) => sec.tools.length > 0);
 
+  const getAcceptedFormats = () => {
+    if (!activeModalTool) return '.pdf,application/pdf';
+    if (activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'compress-image') {
+      return 'image/*,.jpg,.jpeg,.png,.webp,.heic';
+    }
+    if (activeModalTool.id === 'convert-video' || activeModalTool.id === 'compress-video') {
+      return 'video/*,.mp4,.mkv,.avi,.mov,.webm';
+    }
+    if (activeModalTool.id === 'convert-audio' || activeModalTool.id === 'compress-audio') {
+      return 'audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a';
+    }
+    return '.pdf,application/pdf';
+  };
+
   const handleCardClick = (tool: ToolItem) => {
-    // If it is Edit PDF and editor callback exists
-    if (tool.id === 'edit-pdf') {
-      if (stagedPdfFile && onOpenEditor) {
-        onOpenEditor(stagedPdfFile);
-        return;
-      }
-      // If no staged PDF, open modal to select file or notify parent
-      onSelectTool('edit-pdf');
+    // If it is Edit PDF and staged file exists, launch editor directly
+    if (tool.id === 'edit-pdf' && stagedPdfFile && onOpenEditor) {
+      onOpenEditor(stagedPdfFile);
       return;
     }
 
-    // If it is Convert or Compress tabs, delegate to onSelectTool
-    if (tool.section === 'convert' || tool.section === 'compress') {
-      onSelectTool(tool.id);
-      return;
-    }
-
-    // For Edit or Sign & Protect operations, open interactive modal
+    // Open focused interactive modal in-place for all tools without jumping or tab-switching
     setActiveModalTool(tool);
-    setModalFiles(stagedPdfFile ? [stagedPdfFile] : []);
+    setModalFiles(stagedPdfFile && tool.section !== 'convert' ? [stagedPdfFile] : []);
     setIsProcessing(false);
     setProgress(0);
     setProgressStage('idle');
@@ -436,7 +439,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
-      const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages';
+      if (activeModalTool?.id === 'edit-pdf' && onOpenEditor) {
+        setActiveModalTool(null);
+        onOpenEditor(files[0]);
+        return;
+      }
+      const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages' || activeModalTool?.id === 'images-to-pdf';
       setModalFiles(isMultiple ? files : [files[0]]);
       setErrorMessage(null);
     }
@@ -444,10 +452,16 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
 
   const handleDropFiles = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     if (isProcessing) return;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const files = Array.from(e.dataTransfer.files);
-      const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages';
+      if (activeModalTool?.id === 'edit-pdf' && onOpenEditor) {
+        setActiveModalTool(null);
+        onOpenEditor(files[0]);
+        return;
+      }
+      const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages' || activeModalTool?.id === 'images-to-pdf';
       setModalFiles(isMultiple ? files : [files[0]]);
       setErrorMessage(null);
     }
@@ -614,6 +628,84 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           break;
         }
 
+        case 'pdf-to-images': {
+          resultBlob = await pdfApiClient.burstPdf(primaryFile);
+          filename = `${stem}_pages.zip`;
+          break;
+        }
+
+        case 'images-to-pdf': {
+          const formData = new FormData();
+          modalFiles.forEach((f) => formData.append('files', f));
+          const res = await fetch('/api/media/images-to-pdf', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error('Image to PDF conversion failed');
+          resultBlob = await res.blob();
+          filename = `${stem}.pdf`;
+          break;
+        }
+
+        case 'compress-pdf': {
+          const formData = new FormData();
+          formData.append('file', primaryFile);
+          const res = await fetch('/api/compress/pdf', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error('PDF compression failed');
+          resultBlob = await res.blob();
+          filename = `${stem}_compressed.pdf`;
+          break;
+        }
+
+        case 'convert-video': {
+          const formData = new FormData();
+          formData.append('file', primaryFile);
+          formData.append('target_format', 'mp4');
+          const res = await fetch('/api/media/transcode/video', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error('Video conversion failed');
+          resultBlob = await res.blob();
+          filename = `${stem}.mp4`;
+          break;
+        }
+
+        case 'convert-audio': {
+          const formData = new FormData();
+          formData.append('file', primaryFile);
+          formData.append('target_format', 'mp3');
+          const res = await fetch('/api/media/transcode/audio', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error('Audio conversion failed');
+          resultBlob = await res.blob();
+          filename = `${stem}.mp3`;
+          break;
+        }
+
+        case 'compress-video': {
+          const formData = new FormData();
+          formData.append('file', primaryFile);
+          const res = await fetch('/api/compress/video', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error('Video compression failed');
+          resultBlob = await res.blob();
+          filename = `${stem}_compressed.mp4`;
+          break;
+        }
+
+        case 'compress-audio': {
+          const formData = new FormData();
+          formData.append('file', primaryFile);
+          const res = await fetch('/api/compress/audio', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error('Audio compression failed');
+          resultBlob = await res.blob();
+          filename = `${stem}_compressed.mp3`;
+          break;
+        }
+
+        case 'compress-image': {
+          const formData = new FormData();
+          formData.append('file', primaryFile);
+          const res = await fetch('/api/compress/image', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error('Image compression failed');
+          resultBlob = await res.blob();
+          filename = `${stem}_compressed.webp`;
+          break;
+        }
+
         default:
           throw new Error('Tool operation not supported.');
       }
@@ -690,7 +782,11 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
             ].map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id as any)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveCategory(cat.id as any);
+                }}
                 style={{
                   padding: '7px 16px',
                   borderRadius: '20px',
@@ -748,7 +844,11 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
             {sec.tools.map((tool) => (
               <div
                 key={tool.id}
-                onClick={() => handleCardClick(tool)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCardClick(tool);
+                }}
                 className="adobe-converter-card h-full flex flex-col justify-between border border-slate-200 hover:border-slate-300 rounded-xl p-6"
                 style={{
                   backgroundColor: '#ffffff',
@@ -832,6 +932,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                   <button
                     type="button"
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       handleCardClick(tool);
                     }}

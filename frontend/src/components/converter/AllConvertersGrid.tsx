@@ -301,7 +301,11 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveCategory(tab.id as any)}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveCategory(tab.id as any);
+            }}
             style={{
               padding: '8px 16px',
               borderRadius: '20px',
@@ -346,7 +350,11 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
           return (
             <div
               key={c.id}
-              onClick={() => handleOpenModal(c)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleOpenModal(c);
+              }}
               className="adobe-converter-card h-full flex flex-col justify-between border border-slate-200 hover:border-slate-300 rounded-xl p-6"
               style={{
                 backgroundColor: '#ffffff',
@@ -428,6 +436,7 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                 <button
                   type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     handleOpenModal(c);
                   }}
