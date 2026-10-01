@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "project_name": "PDF Toolkit",
+  "stack": {
+    "backend": "Python FastAPI",
+    "pdf_engine": "PyMuPDF / pdfplumber",
+    "frontend": "Modern Web UI (HTML, CSS, JS)"
+  },
+  "workflow": {
+    "tracer_first": true,
+    "verify_each_step": true
+  }
+}
