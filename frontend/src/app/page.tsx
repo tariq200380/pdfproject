@@ -7,6 +7,7 @@ import { Header } from '@/components/Header';
 import { AutoRecoveryBanner } from '@/components/AutoRecoveryBanner';
 import { DragDropZone } from '@/components/DragDropZone';
 import { StagedFileCard } from '@/components/StagedFileCard';
+import { PdfEditorWorkspace } from '@/components/pdf/PdfEditorWorkspace';
 import { Trash2, Plus, Sparkles, Shield, Cpu, RefreshCw, FileText } from 'lucide-react';
 
 export default function StudioHomePage() {
@@ -15,6 +16,7 @@ export default function StudioHomePage() {
   const [recoverableData, setRecoverableData] = useState<{ files: StagedFile[]; savedAt: number } | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [activeNotice, setActiveNotice] = useState<string | null>(null);
+  const [activeEditingPdf, setActiveEditingPdf] = useState<File | null>(null);
 
   // Check for IndexedDB auto-recovery on mount
   useEffect(() => {
@@ -87,9 +89,22 @@ export default function StudioHomePage() {
   };
 
   const handleSelectAction = (file: StagedFile, action: string) => {
-    setActiveNotice(`Selected '${action}' on '${file.name}'. Action target loaded into active workspace.`);
+    if (action === 'edit-text' && file.category === 'pdf') {
+      setActiveEditingPdf(file.file);
+      return;
+    }
+    setActiveNotice(`Selected '${action}' on '${file.name}'. Ready for processing.`);
     setTimeout(() => setActiveNotice(null), 5000);
   };
+
+  if (activeEditingPdf) {
+    return (
+      <PdfEditorWorkspace
+        file={activeEditingPdf}
+        onBack={() => setActiveEditingPdf(null)}
+      />
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
