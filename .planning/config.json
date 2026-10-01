@@ -1,10 +1,14 @@
 {
-  "version": "1.0",
-  "project_name": "PDF Toolkit",
+  "version": "2.0",
+  "project_name": "OmniMedia & PDF Studio",
+  "architecture": "Stateless (No Database, No Auth)",
   "stack": {
-    "backend": "Python FastAPI",
-    "pdf_engine": "PyMuPDF / pdfplumber",
-    "frontend": "Modern Web UI (HTML, CSS, JS)"
+    "frontend": "Next.js (React, TypeScript, CSS Modules / Custom Tokens)",
+    "backend": "Python FastAPI (Uvicorn)",
+    "pdf_engine": "PyMuPDF (fitz) / fonttools / pdfplumber",
+    "media_engine": "FFmpeg (Audio/Video transcoding & CRF compression)",
+    "image_engine": "Pillow / Pillow-HEIF / libvips",
+    "client_storage": "Browser IndexedDB (Auto-recovery with 2-4h TTL)"
   },
   "workflow": {
     "tracer_first": true,

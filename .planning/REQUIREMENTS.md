@@ -1,52 +1,65 @@
-# Requirements: PDF Toolkit
+# Requirements: OmniMedia & PDF Studio
 
-## Functional Requirements
+## 1. Functional Requirements
 
-### FR-1: Document Upload & Inspection
-- **FR-1.1**: The system shall accept single or multiple PDF file uploads via drag-and-drop or file picker.
-- **FR-1.2**: The system shall validate uploaded files (MIME type, PDF magic headers) and reject invalid or corrupted files with clear error messages.
-- **FR-1.3**: The system shall parse and return PDF metadata (title, author, creation date, page count, file size, dimensions).
-- **FR-1.4**: The system shall render page thumbnail images on demand for visual inspection.
+### FR-1: Frictionless Access & Stateless Architecture
+- **FR-1.1**: The platform shall be completely open and accessible without login, registration, password, or cookies.
+- **FR-1.2**: The backend shall operate statelessly with zero database requirements.
+- **FR-1.3**: The backend shall manage file processing in isolated ephemeral directories, auto-purging files immediately upon download or via background task cleanup after a short timeout (5–15 minutes).
 
-### FR-2: PDF Merging
-- **FR-2.1**: The user can upload 2 or more PDF documents to merge into a single target PDF.
-- **FR-2.2**: The user can reorder input documents via drag-and-drop before executing the merge.
-- **FR-2.3**: The resulting merged document shall be downloaded immediately as a valid PDF.
+### FR-2: Seamless In-Place PDF Editor
+- **FR-2.1**: **Font & Geometry Analysis**: The system shall extract text blocks with precise coordinates, font family, font size, weight, line height, baseline offset, and RGB/hex color.
+- **FR-2.2**: **In-Place Replacement**: The system shall redact/replace targeted text spans directly in the PDF stream, matching the original font appearance, baseline alignment, and color so edits are visually indistinguishable.
+- **FR-2.3**: **Visual Interactive Canvas**: The user shall be able to click on text elements within the PDF page preview, edit text inline, and see live font matching before saving.
+- **FR-2.4**: **Core PDF Operations**: The editor shall also support merging multiple PDFs, splitting/bursting pages, page re-ordering, and 90°/180°/270° rotations.
 
-### FR-3: PDF Splitting & Page Extraction
-- **FR-3.1**: The user can specify custom page ranges (e.g., `1-3, 5, 7-10`) to extract from a document.
-- **FR-3.2**: The user can split a document into single-page PDFs (burst mode) and download as a ZIP archive.
-- **FR-3.3**: The user can preview selected page ranges before initiating the split.
+### FR-3: Universal Media Conversion Engine
+- **FR-3.1: Image-to-PDF**: Combine single or multiple images (`PNG`, `JPG`, `WEBP`, `SVG`, `HEIC`) into a single PDF with configurable margins, orientation, and resolution.
+- **FR-3.2: PDF-to-Image**: Convert PDF pages to raster and vector formats (`PNG`, `JPG`, `WEBP`, `SVG`) at selectable DPI (72, 150, 300 DPI) with single-page or ZIP batch download.
+- **FR-3.3: Universal Audio Converter**:
+  - Convert between `MP3`, `WAV`, `AAC`, `FLAC`, `OGG`, and `M4A`.
+  - Configurable bitrate (128k, 192k, 256k, 320k) and sample rate (44.1kHz, 48kHz).
+  - FFmpeg asynchronous transcoding pipeline.
+- **FR-3.4: Universal Video Converter**:
+  - Convert between `MP4`, `MKV`, `AVI`, `WEBM`, and `MOV`.
+  - Configurable resolution presets (Original, 1080p, 720p, 480p) and codec presets (H.264, H.265, VP9).
+  - Stream progress indicator for long video conversions.
 
-### FR-4: Page Organization & Rotation
-- **FR-4.1**: The user can visually reorder pages within a single PDF document.
-- **FR-4.2**: The user can rotate individual or all pages clockwise or counterclockwise in 90-degree increments.
-- **FR-4.3**: The user can delete specific unwanted pages from the document.
+### FR-4: Smart Media Compressor (High Quality / Lossless Reduction)
+- **FR-4.1: Image Compression**:
+  - Reduce file sizes by up to 70–85% using modern algorithms (`WebP`, `MozJPEG`, `OxiPNG`).
+  - Interactive comparison displaying original size, compressed size, and percentage saved.
+- **FR-4.2: Video Compression**:
+  - Multi-pass / CRF (Constant Rate Factor) encoding via FFmpeg (CRF 23–28 for H.264/H.265).
+  - Smart audio track bitrate normalization.
+  - Significant file size reduction without perceptible visual distortion.
+- **FR-4.3: Audio Compression**:
+  - Lossy & lossless optimization (Opus/AAC bitrate targeting or FLAC compression levels).
 
-### FR-5: Compression & Optimization
-- **FR-5.1**: The system shall provide PDF compression presets (e.g., Low, Medium, High compression).
-- **FR-5.2**: The system shall report original size vs. compressed size and reduction percentage.
+### FR-5: Client-Side Cache & Auto-Recovery (IndexedDB)
+- **FR-5.1: Local Persistence**: The frontend shall store active file blobs, staged items, and in-progress PDF edit states in browser IndexedDB.
+- **FR-5.2: Tab/Browser Close Recovery**: If the user navigates away or accidentally closes the tab, visiting the studio again within 2–4 hours shall prompt an option: *"Restore previous session?"*.
+- **FR-5.3: Automated TTL Purge**: Any cached session or binary file in IndexedDB older than the configured TTL (2 to 4 hours) shall be automatically deleted on startup or periodic check.
+- **FR-5.4: Manual Purge**: The user can click a "Clear Workspace" button to immediately wipe all local IndexedDB cached files.
+
+### FR-6: Next.js Ultra-Modern Interface
+- **FR-6.1**: Premium, clutter-free UI with sleek typography, polished controls, and smooth micro-interactions.
+- **FR-6.2**: Universal drag-and-drop workspace that automatically recognizes file types and highlights suitable actions (Edit, Convert, Compress).
+- **FR-6.3**: Real-time progress feedback (upload progress, encoding progress, download ready state).
 
 ---
 
-## Non-Functional Requirements
+## 2. Non-Functional Requirements
 
-### NFR-1: Performance & Responsiveness
-- Operations on standard documents (<50MB, <100 pages) shall complete processing in under 3 seconds.
-- Page thumbnail rendering shall be lazy-loaded or generated efficiently on demand.
+### NFR-1: Processing Performance & Concurrency
+- Stream-based and asynchronous background processing so long media conversions do not block FastAPI event loop.
+- PyMuPDF native C-bindings used for sub-second PDF page rendering and text parsing.
 
-### NFR-2: Security & File Hygiene
-- Temporary uploaded files and output files shall be stored in isolated directories and cleared automatically after download or timeout.
-- Maximum upload size per file constrained to 100MB with proper payload validation.
+### NFR-2: Statelessness & Security
+- Strict file sanitization: safe filename hashing, MIME type verification, and path traversal protection.
+- No client data or telemetry saved in any persistent server-side database.
+- Ephemeral workspace auto-cleaned via FastAPI `BackgroundTask` and periodic scheduled cleanups.
 
-### NFR-3: User Interface & Experience
-- Modern, accessible, responsive design with clear status feedback (upload progress, processing spinners, toast notifications).
-- Tabbed or card-based workflow allowing quick switching between tools (Merge, Split, Organize, Compress).
-
----
-
-## Out of Scope (v1.0)
-- User authentication and persistent cloud storage.
-- Optical Character Recognition (OCR) for scanned images without text layers (candidate for v2).
-- Digital cryptographic signature keypair management (candidate for v2).
-- Direct inline WYSIWYG text editing of existing PDF paragraphs.
+### NFR-3: User Experience Standards
+- Zero external ad banners, zero popups, zero mandatory registration hurdles.
+- Highly responsive across all standard desktop and tablet screen dimensions.
