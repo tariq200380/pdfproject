@@ -4,13 +4,15 @@ import React, { useEffect, useState } from 'react';
 import { ActiveStudioTab, StagedFile } from '@/lib/types';
 import { detectCategory, indexedDBService } from '@/lib/indexedDbService';
 import { Header } from '@/components/Header';
+import { ToolActionId } from '@/components/adobe/MegaMenu';
+import { ToolsGrid } from '@/components/adobe/ToolsGrid';
 import { AutoRecoveryBanner } from '@/components/AutoRecoveryBanner';
 import { DragDropZone } from '@/components/DragDropZone';
 import { StagedFileCard } from '@/components/StagedFileCard';
 import { PdfEditorWorkspace } from '@/components/pdf/PdfEditorWorkspace';
 import { MediaConverterWorkspace } from '@/components/converter/MediaConverterWorkspace';
 import { SmartCompressorWorkspace } from '@/components/compressor/SmartCompressorWorkspace';
-import { Trash2, Sparkles, Shield, RefreshCw, FileText } from 'lucide-react';
+import { Trash2, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function StudioHomePage() {
   const [activeTab, setActiveTab] = useState<ActiveStudioTab>('pdf');
@@ -119,6 +121,78 @@ export default function StudioHomePage() {
     setTimeout(() => setActiveNotice(null), 5000);
   };
 
+  const handleSelectTool = (toolId: ToolActionId) => {
+    if (toolId === 'all-tools') {
+      setActiveTab('pdf');
+      setTimeout(() => {
+        const elem = document.getElementById('adobe-tools-grid');
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 50);
+      return;
+    }
+
+    if (toolId === 'edit-pdf') {
+      const pdfFile = stagedFiles.find((f) => f.category === 'pdf');
+      if (pdfFile) {
+        setActiveEditingPdf(pdfFile.file);
+      } else {
+        setActiveTab('pdf');
+        setActiveNotice('Please drag & drop or choose a PDF document above to launch the in-place editor.');
+        setTimeout(() => setActiveNotice(null), 5000);
+      }
+      return;
+    }
+
+    if (toolId === 'merge-pdf' || toolId === 'split-pdf' || toolId === 'rotate-pdf') {
+      const pdfFile = stagedFiles.find((f) => f.category === 'pdf');
+      if (pdfFile) {
+        setActiveEditingPdf(pdfFile.file);
+      } else {
+        setActiveTab('pdf');
+        setActiveNotice(`Please upload a PDF document above to ${toolId.replace('-', ' ')}.`);
+        setTimeout(() => setActiveNotice(null), 5000);
+      }
+      return;
+    }
+
+    if (
+      toolId === 'images-to-pdf' ||
+      toolId === 'pdf-to-images' ||
+      toolId === 'pdf-to-svg' ||
+      toolId === 'convert-audio' ||
+      toolId === 'convert-video'
+    ) {
+      const candidate = stagedFiles.find((f) => {
+        if (toolId === 'images-to-pdf') return f.category === 'image';
+        if (toolId === 'pdf-to-images' || toolId === 'pdf-to-svg') return f.category === 'pdf';
+        if (toolId === 'convert-audio') return f.category === 'audio';
+        if (toolId === 'convert-video') return f.category === 'video';
+        return false;
+      });
+      if (candidate) {
+        setPreselectedFileId(candidate.id);
+      }
+      setActiveTab('converter');
+      return;
+    }
+
+    if (toolId.startsWith('compress')) {
+      const candidate = stagedFiles.find((f) => {
+        if (toolId === 'compress-image') return f.category === 'image';
+        if (toolId === 'compress-video') return f.category === 'video';
+        if (toolId === 'compress-audio') return f.category === 'audio';
+        return f.category !== 'pdf';
+      });
+      if (candidate) {
+        setPreselectedFileId(candidate.id);
+      }
+      setActiveTab('compressor');
+      return;
+    }
+  };
+
   if (activeEditingPdf) {
     return (
       <PdfEditorWorkspace
@@ -135,6 +209,7 @@ export default function StudioHomePage() {
         onTabChange={(tab) => {
           setActiveTab(tab);
         }}
+        onSelectTool={handleSelectTool}
         stagedCount={stagedFiles.length}
       />
 
@@ -191,6 +266,29 @@ export default function StudioHomePage() {
 
         {activeTab === 'pdf' && (
           <>
+            {/* Adobe Acrobat Portal Hero Header */}
+            <section style={{ maxWidth: '1100px', margin: '40px auto 16px auto', textAlign: 'center' }}>
+              <h2 style={{
+                fontSize: '34px',
+                fontWeight: 800,
+                color: '#0f172a',
+                letterSpacing: '-0.03em',
+                lineHeight: 1.25,
+                marginBottom: '10px',
+              }}>
+                Do your best work with all-in-one PDF & Media Studio
+              </h2>
+              <p style={{
+                fontSize: '16px',
+                color: '#475569',
+                maxWidth: '680px',
+                margin: '0 auto',
+                lineHeight: 1.5,
+              }}>
+                Create, convert, edit, and compress PDFs, audio, video, and photos. 100% stateless, zero registration required.
+              </p>
+            </section>
+
             {/* Drag & Drop Staging Area */}
             <DragDropZone onFilesSelected={handleFilesSelected} />
 
@@ -243,85 +341,8 @@ export default function StudioHomePage() {
               </section>
             )}
 
-            {/* Feature Highlights Grid */}
-            {stagedFiles.length === 0 && (
-              <section style={{
-                maxWidth: '1100px',
-                margin: '48px auto 0 auto',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: '24px',
-              }}>
-                <div className="solid-card" style={{ padding: '32px' }}>
-                  <div style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '10px',
-                    backgroundColor: '#fee2e2',
-                    color: '#b91c1c',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '18px',
-                    boxShadow: '0 2px 4px rgba(185, 28, 28, 0.08)',
-                  }}>
-                    <FileText size={22} />
-                  </div>
-                  <h4 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.015em' }}>
-                    Seamless In-Place PDF Editor
-                  </h4>
-                  <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6', margin: 0 }}>
-                    Click directly on PDF text to edit in-place. Automatically extracts original font family, size, baseline, and color so edits blend imperceptibly.
-                  </p>
-                </div>
-
-                <div className="solid-card" style={{ padding: '32px' }}>
-                  <div style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '10px',
-                    backgroundColor: '#e0f2fe',
-                    color: '#0369a1',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '18px',
-                    boxShadow: '0 2px 4px rgba(3, 105, 161, 0.08)',
-                  }}>
-                    <RefreshCw size={22} />
-                  </div>
-                  <h4 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.015em' }}>
-                    Universal Media Converters
-                  </h4>
-                  <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6', margin: 0 }}>
-                    Convert across MP3, WAV, AAC, FLAC, OGG, and transcode video containers (MP4, MKV, AVI, WEBM, MOV) with hardware-accelerated FFmpeg.
-                  </p>
-                </div>
-
-                <div className="solid-card" style={{ padding: '32px' }}>
-                  <div style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '10px',
-                    backgroundColor: '#ecfdf5',
-                    color: '#047857',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '18px',
-                    boxShadow: '0 2px 4px rgba(4, 120, 87, 0.08)',
-                  }}>
-                    <Shield size={22} />
-                  </div>
-                  <h4 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.015em' }}>
-                    Stateless & Auto-Recoverable
-                  </h4>
-                  <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6', margin: 0 }}>
-                    Zero registration or tracking. Active files are cached in your browser IndexedDB with a 3-hour auto-recovery TTL so accidental closes never lose your work.
-                  </p>
-                </div>
-              </section>
-            )}
+            {/* Adobe-Style Categorized Tools Grid */}
+            <ToolsGrid onSelectTool={handleSelectTool} />
           </>
         )}
       </main>

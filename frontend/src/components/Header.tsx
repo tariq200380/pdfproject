@@ -1,224 +1,266 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ActiveStudioTab } from '@/lib/types';
-import { FileText, RefreshCw, Minimize2, HardDrive, ShieldCheck } from 'lucide-react';
+import { MegaMenu, ToolActionId } from './adobe/MegaMenu';
+import {
+  FileText,
+  RefreshCw,
+  Minimize2,
+  HardDrive,
+  ShieldCheck,
+  ChevronDown,
+  LayoutGrid,
+} from 'lucide-react';
 
 interface HeaderProps {
   activeTab: ActiveStudioTab;
   onTabChange: (tab: ActiveStudioTab) => void;
+  onSelectTool?: (toolId: ToolActionId) => void;
   stagedCount: number;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange, stagedCount }) => {
+export const Header: React.FC<HeaderProps> = ({
+  activeTab,
+  onTabChange,
+  onSelectTool,
+  stagedCount,
+}) => {
+  const [openMenu, setOpenMenu] = useState<'convert' | 'edit' | 'compress' | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Close dropdown menu if user clicks outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleToolDispatch = (toolId: ToolActionId) => {
+    setOpenMenu(null);
+    if (onSelectTool) {
+      onSelectTool(toolId);
+    } else {
+      if (toolId.startsWith('compress')) {
+        onTabChange('compressor');
+      } else if (toolId.startsWith('convert') || toolId.includes('to-pdf')) {
+        onTabChange('converter');
+      } else {
+        onTabChange('pdf');
+      }
+    }
+  };
+
   return (
-    <header style={{
-      backgroundColor: '#ffffff',
-      borderBottom: '1px solid #e2e8f0',
-      padding: '16px 32px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'sticky',
-      top: 0,
-      zIndex: 40,
-      boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.03)',
-    }}>
-      {/* Brand & Stateless Security Badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          backgroundColor: '#0f172a',
-          color: '#ffffff',
-          borderRadius: '10px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 800,
-          fontSize: '20px',
-          boxShadow: '0 2px 5px rgba(15, 23, 42, 0.2)',
-          userSelect: 'none',
-        }}>
-          Ω
-        </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.025em', margin: 0 }}>
-              OmniMedia & PDF Studio
-            </h1>
-            <span style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              padding: '3px 9px',
-              backgroundColor: '#ecfdf5',
-              color: '#047857',
-              borderRadius: '6px',
-              border: '1px solid #a7f3d0',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              letterSpacing: '0.01em',
-            }}>
-              <ShieldCheck size={13} color="#059669" />
-              Stateless • No Login
-            </span>
+    <header
+      ref={headerRef}
+      style={{
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '0 32px',
+        height: '64px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.04)',
+      }}
+    >
+      {/* Left side: Studio Logo, Name, Divider, and Acrobat Navigation Items */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        {/* Adobe-inspired Brand Emblem */}
+        <div
+          onClick={() => {
+            setOpenMenu(null);
+            onTabChange('pdf');
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          <div style={{
+            width: '36px',
+            height: '36px',
+            backgroundColor: '#e11d48',
+            color: '#ffffff',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 800,
+            fontSize: '18px',
+            boxShadow: '0 2px 5px rgba(225, 29, 72, 0.3)',
+          }}>
+            Ω
           </div>
+          <span style={{
+            fontSize: '18px',
+            fontWeight: 700,
+            color: '#0f172a',
+            letterSpacing: '-0.025em',
+          }}>
+            OmniMedia Studio
+          </span>
         </div>
+
+        {/* Clean Vertical Divider */}
+        <div style={{ width: '1px', height: '24px', backgroundColor: '#e2e8f0' }} />
+
+        {/* Acrobat Online Navigation Items */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {/* Tools button */}
+          <button
+            onClick={() => handleToolDispatch('all-tools')}
+            className={`adobe-nav-item ${activeTab === 'pdf' && !openMenu ? 'active' : ''}`}
+          >
+            <LayoutGrid size={16} />
+            Tools
+          </button>
+
+          {/* Convert with Mega Menu */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setOpenMenu(openMenu === 'convert' ? null : 'convert')}
+              className={`adobe-nav-item ${openMenu === 'convert' || activeTab === 'converter' ? 'active' : ''}`}
+            >
+              Convert
+              <ChevronDown
+                size={14}
+                style={{
+                  transform: openMenu === 'convert' ? 'rotate(180deg)' : 'none',
+                  transition: 'transform 0.15s ease',
+                }}
+              />
+            </button>
+            {openMenu === 'convert' && (
+              <MegaMenu
+                menuType="convert"
+                onSelectTool={handleToolDispatch}
+                onClose={() => setOpenMenu(null)}
+              />
+            )}
+          </div>
+
+          {/* Edit with Mega Menu */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setOpenMenu(openMenu === 'edit' ? null : 'edit')}
+              className={`adobe-nav-item ${openMenu === 'edit' ? 'active' : ''}`}
+            >
+              Edit
+              <ChevronDown
+                size={14}
+                style={{
+                  transform: openMenu === 'edit' ? 'rotate(180deg)' : 'none',
+                  transition: 'transform 0.15s ease',
+                }}
+              />
+            </button>
+            {openMenu === 'edit' && (
+              <MegaMenu
+                menuType="edit"
+                onSelectTool={handleToolDispatch}
+                onClose={() => setOpenMenu(null)}
+              />
+            )}
+          </div>
+
+          {/* Compress with Mega Menu */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setOpenMenu(openMenu === 'compress' ? null : 'compress')}
+              className={`adobe-nav-item ${openMenu === 'compress' || activeTab === 'compressor' ? 'active' : ''}`}
+            >
+              Compress
+              <ChevronDown
+                size={14}
+                style={{
+                  transform: openMenu === 'compress' ? 'rotate(180deg)' : 'none',
+                  transition: 'transform 0.15s ease',
+                }}
+              />
+            </button>
+            {openMenu === 'compress' && (
+              <MegaMenu
+                menuType="compress"
+                onSelectTool={handleToolDispatch}
+                onClose={() => setOpenMenu(null)}
+              />
+            )}
+          </div>
+
+          {/* Media Studio link */}
+          <button
+            onClick={() => {
+              setOpenMenu(null);
+              onTabChange('converter');
+            }}
+            className={`adobe-nav-item ${activeTab === 'converter' && !openMenu ? 'active' : ''}`}
+          >
+            <RefreshCw size={15} />
+            Media Studio
+          </button>
+        </nav>
       </div>
 
-      {/* Prominent Studio Navigation Tabs */}
-      <nav style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        backgroundColor: '#f1f5f9',
-        padding: '5px',
-        borderRadius: '12px',
-        border: '1px solid #cbd5e1',
-        boxShadow: 'inset 0 1px 2px rgba(15, 23, 42, 0.04)',
-      }}>
-        {/* PDF Studio Tab */}
-        <button
-          onClick={() => onTabChange('pdf')}
-          style={{
-            height: '46px',
-            padding: '0 24px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '9px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'pdf' ? 700 : 600,
-            borderRadius: '8px',
-            border: activeTab === 'pdf' ? '1px solid #cbd5e1' : '1px solid transparent',
-            backgroundColor: activeTab === 'pdf' ? '#ffffff' : 'transparent',
-            color: activeTab === 'pdf' ? '#0f172a' : '#475569',
-            boxShadow: activeTab === 'pdf' ? '0 2px 5px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
-            cursor: 'pointer',
-            transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-            outline: 'none',
-          }}
-          onMouseEnter={(e) => {
-            if (activeTab !== 'pdf') {
-              e.currentTarget.style.color = '#0f172a';
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (activeTab !== 'pdf') {
-              e.currentTarget.style.color = '#475569';
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }
-          }}
-        >
-          <FileText size={17} color={activeTab === 'pdf' ? '#b91c1c' : '#64748b'} />
-          PDF Studio
-        </button>
+      {/* Right side: NO sign in/registration. Strictly Frictionless & Stateless */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{
+          fontSize: '11px',
+          fontWeight: 600,
+          padding: '4px 10px',
+          backgroundColor: '#ecfdf5',
+          color: '#047857',
+          borderRadius: '6px',
+          border: '1px solid #a7f3d0',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+        }}>
+          <ShieldCheck size={13} color="#059669" />
+          Stateless • Zero Storage
+        </span>
 
-        {/* Universal Converter Tab */}
-        <button
-          onClick={() => onTabChange('converter')}
-          style={{
-            height: '46px',
-            padding: '0 24px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '9px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'converter' ? 700 : 600,
-            borderRadius: '8px',
-            border: activeTab === 'converter' ? '1px solid #cbd5e1' : '1px solid transparent',
-            backgroundColor: activeTab === 'converter' ? '#ffffff' : 'transparent',
-            color: activeTab === 'converter' ? '#0f172a' : '#475569',
-            boxShadow: activeTab === 'converter' ? '0 2px 5px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
-            cursor: 'pointer',
-            transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-            outline: 'none',
-          }}
-          onMouseEnter={(e) => {
-            if (activeTab !== 'converter') {
-              e.currentTarget.style.color = '#0f172a';
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (activeTab !== 'converter') {
-              e.currentTarget.style.color = '#475569';
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }
-          }}
-        >
-          <RefreshCw size={17} color={activeTab === 'converter' ? '#0284c7' : '#64748b'} />
-          Media Converter
-        </button>
-
-        {/* Smart Compressor Tab */}
-        <button
-          onClick={() => onTabChange('compressor')}
-          style={{
-            height: '46px',
-            padding: '0 24px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '9px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'compressor' ? 700 : 600,
-            borderRadius: '8px',
-            border: activeTab === 'compressor' ? '1px solid #cbd5e1' : '1px solid transparent',
-            backgroundColor: activeTab === 'compressor' ? '#ffffff' : 'transparent',
-            color: activeTab === 'compressor' ? '#0f172a' : '#475569',
-            boxShadow: activeTab === 'compressor' ? '0 2px 5px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
-            cursor: 'pointer',
-            transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-            outline: 'none',
-          }}
-          onMouseEnter={(e) => {
-            if (activeTab !== 'compressor') {
-              e.currentTarget.style.color = '#0f172a';
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (activeTab !== 'compressor') {
-              e.currentTarget.style.color = '#475569';
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }
-          }}
-        >
-          <Minimize2 size={17} color={activeTab === 'compressor' ? '#7c3aed' : '#64748b'} />
-          Smart Compressor
-        </button>
-      </nav>
-
-      {/* Local Auto-Recovery Status Pill */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        fontSize: '12px',
-        fontWeight: 500,
-        color: '#475569',
-        backgroundColor: '#f8fafc',
-        padding: '6px 14px',
-        borderRadius: '8px',
-        border: '1px solid #e2e8f0',
-      }}>
-        <HardDrive size={15} color="#059669" />
-        <span>IndexedDB Cache</span>
-        {stagedCount > 0 ? (
-          <span style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            backgroundColor: '#0f172a',
-            color: '#ffffff',
-            padding: '1px 6px',
-            borderRadius: '10px',
-          }}>
-            {stagedCount}
-          </span>
-        ) : (
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>idle</span>
-        )}
+        {/* Local Auto-Recovery Status Pill */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '12px',
+          fontWeight: 600,
+          color: '#475569',
+          backgroundColor: '#f8fafc',
+          padding: '6px 12px',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0',
+        }}>
+          <HardDrive size={14} color="#059669" />
+          <span>IndexedDB Cache</span>
+          {stagedCount > 0 ? (
+            <span style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              backgroundColor: '#0f172a',
+              color: '#ffffff',
+              padding: '1px 6px',
+              borderRadius: '10px',
+            }}>
+              {stagedCount}
+            </span>
+          ) : (
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>0</span>
+          )}
+        </div>
       </div>
     </header>
   );

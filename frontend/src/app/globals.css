@@ -1,4 +1,5 @@
 /* Minimal Daylight Design System - OmniMedia & PDF Studio */
+/* Adobe Acrobat Online Portal Architecture & Clean UI Standards */
 
 :root {
   /* Daylight Palette */
@@ -17,6 +18,12 @@
   --text-secondary: #334155;
   --text-muted: #64748b;
   --text-inverse: #ffffff;
+
+  /* Adobe Brand Accents */
+  --adobe-red: #e11d48;
+  --adobe-red-hover: #be123c;
+  --adobe-red-subtle: #fff1f2;
+  --adobe-red-border: #fecdd3;
 
   /* Tactile Interactive Tokens */
   --btn-primary-bg: #0f172a;
@@ -51,6 +58,7 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
   --shadow-lg: 0 10px 20px -3px rgba(15, 23, 42, 0.07), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+  --shadow-mega: 0 16px 36px -6px rgba(15, 23, 42, 0.12), 0 6px 12px -2px rgba(15, 23, 42, 0.05);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -196,4 +204,116 @@ a {
   background-color: var(--accent-green-subtle);
   color: var(--accent-green);
   border-color: var(--accent-green-border);
+}
+
+/* Adobe Acrobat Portal Navigation Styles */
+.adobe-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 8px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: all 0.15s ease;
+  position: relative;
+  user-select: none;
+}
+
+.adobe-nav-item:hover,
+.adobe-nav-item.active {
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+
+.adobe-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -18px;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  background-color: #0f172a;
+  border-radius: 2px 2px 0 0;
+}
+
+/* Adobe Mega Menu Dropdown Container */
+.adobe-mega-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 12px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: var(--shadow-mega);
+  padding: 24px;
+  z-index: 100;
+  animation: adobeMenuFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes adobeMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.adobe-mega-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.adobe-mega-item:hover {
+  background-color: #f8fafc;
+}
+
+.adobe-mega-item:hover .item-title {
+  color: #0f172a;
+}
+
+/* Adobe Acrobat Portal Tool Card */
+.adobe-tool-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justifyContent: space-between;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  position: relative;
+  min-height: 180px;
+}
+
+.adobe-tool-card:hover {
+  border-color: #94a3b8;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.adobe-tool-card:hover .tool-action-btn {
+  background-color: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
 }
