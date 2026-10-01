@@ -404,15 +404,19 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                   {c.title}
                 </h4>
 
-                {/* Converter Description with line-clamp-2 */}
+                {/* Converter Description with line-clamp-2 and h-10 */}
                 <p
-                  className="line-clamp-2"
+                  className="line-clamp-2 h-10"
                   style={{
                     fontSize: '13px',
                     color: '#64748b',
-                    lineHeight: 1.5,
+                    lineHeight: '20px',
                     margin: 0,
                     marginBottom: '20px',
+                    height: '40px',
+                    minHeight: '40px',
+                    maxHeight: '40px',
+                    overflow: 'hidden',
                   }}
                 >
                   {c.description}
@@ -420,7 +424,7 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
               </div>
 
               {/* Adobe Acrobat Signature Pill Button aligned to bottom-left */}
-              <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-start' }}>
+              <div className="mt-auto" style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-start' }}>
                 <button
                   type="button"
                   onClick={(e) => {
