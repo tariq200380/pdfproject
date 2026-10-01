@@ -175,6 +175,17 @@ export const StagedFileCard: React.FC<StagedFileCardProps> = ({
           </>
         )}
 
+        {stagedFile.category === 'other' && (
+          <button
+            onClick={() => onSelectAction(stagedFile, 'convert-to-pdf')}
+            className="btn btn-primary"
+            style={{ padding: '8px 16px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            Convert to PDF
+            <ArrowRight size={14} />
+          </button>
+        )}
+
         <button
           onClick={() => onRemove(stagedFile.id)}
           style={{

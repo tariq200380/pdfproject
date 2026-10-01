@@ -3,11 +3,15 @@
 import React, { useRef, useState } from 'react';
 import { UploadCloud, FileText, Image as ImageIcon, Video, Music, FolderUp } from 'lucide-react';
 
+const UNIVERSAL_ACCEPT =
+  '.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.rtf,.jpg,.jpeg,.png,.webp,.svg,.heic,.heif,.bmp,.tiff,.tif,.gif,.psd,.ai,.indd,.idml,.mp4,.mov,.mkv,.avi,.webm,.mp3,.wav,.aac,.flac,.ogg,.m4a,image/*,video/*,audio/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.*';
+
 interface DragDropZoneProps {
   onFilesSelected: (files: File[]) => void;
+  accept?: string;
 }
 
-export const DragDropZone: React.FC<DragDropZoneProps> = ({ onFilesSelected }) => {
+export const DragDropZone: React.FC<DragDropZoneProps> = ({ onFilesSelected, accept = UNIVERSAL_ACCEPT }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -78,6 +82,7 @@ export const DragDropZone: React.FC<DragDropZoneProps> = ({ onFilesSelected }) =
         ref={inputRef}
         type="file"
         multiple
+        accept={accept}
         style={{ display: 'none' }}
         onChange={handleInputChange}
       />
@@ -170,6 +175,23 @@ export const DragDropZone: React.FC<DragDropZoneProps> = ({ onFilesSelected }) =
         }}>
           <FileText size={15} color="#b91c1c" />
           PDF Document
+        </span>
+
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '6px 14px',
+          backgroundColor: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          borderRadius: '8px',
+          fontSize: '12px',
+          fontWeight: 600,
+          color: '#1d4ed8',
+          boxShadow: '0 1px 2px rgba(29, 78, 216, 0.05)',
+        }}>
+          <FileText size={15} color="#1d4ed8" />
+          Word, Excel, PPT (.docx, .xlsx, .pptx)
         </span>
 
         <span style={{

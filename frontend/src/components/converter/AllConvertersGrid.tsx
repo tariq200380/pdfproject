@@ -149,6 +149,22 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
     }
   };
 
+  const getFormattedAcceptedList = (accept: string): string => {
+    if (accept === '*/*') return 'All Supported Formats';
+    const parts = accept.split(',');
+    const exts = parts.filter((p) => p.startsWith('.'));
+    if (exts.length > 0 && exts.length <= 6) {
+      return exts.join(', ');
+    }
+    if (parts.some((p) => p.includes('image/*'))) {
+      return 'All Images (.png, .jpg, .webp, .heic, .bmp, .tiff, .gif)';
+    }
+    if (parts.some((p) => p.includes('video/*') || p.includes('audio/*'))) {
+      return 'All Media Formats (Video, Audio, Images, Documents)';
+    }
+    return exts.slice(0, 6).join(', ') + (exts.length > 6 ? ', ...' : '');
+  };
+
   const handleOpenModal = (converter: ConverterConfig) => {
     const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     setActiveConverter(converter);
@@ -682,7 +698,7 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                     Choose a file or drag & drop here
                   </p>
                   <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-                    Accepted formats: <span style={{ fontWeight: 600, color: '#0f172a' }}>{activeConverter.accept}</span>
+                    Accepted formats: <span style={{ fontWeight: 600, color: '#0f172a' }}>{getFormattedAcceptedList(activeConverter.accept)}</span>
                   </p>
 
                   <input

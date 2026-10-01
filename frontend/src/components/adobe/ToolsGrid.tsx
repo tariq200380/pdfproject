@@ -397,15 +397,29 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const getAcceptedFormats = () => {
     if (!activeModalTool) return '.pdf,application/pdf';
     if (activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'compress-image') {
-      return 'image/*,.jpg,.jpeg,.png,.webp,.heic';
+      return 'image/*,.png,.jpg,.jpeg,.webp,.heic,.heif,.bmp,.tiff,.tif,.gif';
     }
     if (activeModalTool.id === 'convert-video' || activeModalTool.id === 'compress-video') {
-      return 'video/*,.mp4,.mkv,.avi,.mov,.webm';
+      return 'video/*,.mp4,.mov,.mkv,.avi,.webm';
     }
     if (activeModalTool.id === 'convert-audio' || activeModalTool.id === 'compress-audio') {
       return 'audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a';
     }
     return '.pdf,application/pdf';
+  };
+
+  const getToolFormatDescription = () => {
+    if (!activeModalTool) return 'Supports standard PDF documents (.pdf)';
+    if (activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'compress-image') {
+      return 'Supports all image formats (JPG, PNG, WEBP, HEIC, TIFF, BMP, GIF)';
+    }
+    if (activeModalTool.id === 'convert-video' || activeModalTool.id === 'compress-video') {
+      return 'Supports standard video formats (MP4, MOV, MKV, AVI, WEBM)';
+    }
+    if (activeModalTool.id === 'convert-audio' || activeModalTool.id === 'compress-audio') {
+      return 'Supports standard audio formats (MP3, WAV, AAC, FLAC, OGG, M4A)';
+    }
+    return 'Supports standard PDF documents (.pdf)';
   };
 
   const handleCardClick = (tool: ToolItem) => {
@@ -1108,17 +1122,29 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '3px' }}>
                       {activeModalTool.id === 'merge-pdf' || activeModalTool.id === 'insert-pages'
                         ? 'Choose 2 or more PDFs to combine'
+                        : activeModalTool.id === 'images-to-pdf'
+                        ? 'Choose images to combine into PDF'
+                        : activeModalTool.id.includes('video')
+                        ? 'Choose a video file or drag & drop here'
+                        : activeModalTool.id.includes('audio')
+                        ? 'Choose an audio file or drag & drop here'
+                        : activeModalTool.id === 'compress-image'
+                        ? 'Choose an image to compress'
                         : 'Choose a PDF document or drag & drop here'}
                     </p>
                     <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-                      Supports standard PDF documents (.pdf)
+                      {getToolFormatDescription()}
                     </p>
 
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".pdf,application/pdf"
-                      multiple={activeModalTool.id === 'merge-pdf' || activeModalTool.id === 'insert-pages'}
+                      accept={getAcceptedFormats()}
+                      multiple={
+                        activeModalTool.id === 'merge-pdf' ||
+                        activeModalTool.id === 'insert-pages' ||
+                        activeModalTool.id === 'images-to-pdf'
+                      }
                       onChange={handleFileInputChange}
                       style={{ display: 'none' }}
                     />
