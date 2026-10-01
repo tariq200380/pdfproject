@@ -1,7 +1,7 @@
 # Phase 3 Execution Plan: Next.js Shell & IndexedDB Recovery
 
 ## Phase Summary
-Scaffold the Next.js frontend application with an ultra-modern aesthetic design system, multi-format drag-and-drop workspace, and browser IndexedDB auto-recovery with 2–4h TTL.
+Scaffold the Next.js frontend application with a minimal, solid daylight aesthetic (crisp light-grey canvas, pure white tactile cards, sharp clean borders, zero glass/neon), multi-format drag-and-drop workspace, and browser IndexedDB auto-recovery with 2–4h TTL.
 
 ---
 
@@ -10,22 +10,24 @@ Scaffold the Next.js frontend application with an ultra-modern aesthetic design 
 ### Task 1: Next.js Application Scaffold
 - **Directory**: `frontend/`
 - **Actions**:
-  1. Initialize Next.js project using `create-next-app` or clean template with TypeScript, App Router (`src/app`), and npm.
+  1. Initialize Next.js project with TypeScript, App Router (`src/app`), and npm.
   2. Configure `next.config.js` with API proxy rewrite to FastAPI backend (`/api/:path*` -> `http://127.0.0.1:8000/api/:path*`).
-  3. Ensure clean dependencies (`react`, `react-dom`, `next`, `lucide-react` for modern icons).
+  3. Ensure clean dependencies (`react`, `react-dom`, `next`, `lucide-react` for modern crisp icons).
 - **Verification**: Run `npm install` and verify project structure.
 
-### Task 2: Core Design System & Styling Tokens
+### Task 2: Minimal Daylight Design System & Styling Tokens
 - **Files**:
   - `frontend/src/app/globals.css`
-  - `frontend/src/styles/tokens.css`
 - **Actions**:
-  1. Implement complete design token system:
-     - Obsidian dark theme palettes (`--bg-primary`, `--bg-surface`, `--bg-glass`, `--border-subtle`, `--border-glow`).
-     - Gradient variables (`--gradient-accent`, `--gradient-glow`, `--gradient-card`).
-     - Typography tokens (Inter/Geist font family, letter spacing, font scale).
-     - Glassmorphism utilities (`.glass-panel`, `.glass-modal`, `.glow-border`).
-     - Micro-interaction animations (`pulse-glow`, `fade-in`, `slide-up`).
+  1. Implement complete minimal daylight design tokens:
+     - Off-white canvas: `--bg-canvas: #f8fafc;`
+     - Solid white surfaces: `--bg-surface: #ffffff;`
+     - Muted background: `--bg-muted: #f1f5f9;`
+     - Sharp crisp borders: `--border-subtle: #e2e8f0; --border-strong: #cbd5e1;`
+     - Typography colors: `--text-primary: #0f172a; --text-secondary: #64748b;`
+     - Button actions: `--btn-primary: #0f172a; --btn-primary-text: #ffffff;`
+     - Clean shadow tokens: `--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05);`
+     - ZERO backdrop-filter blur, ZERO dark neon gradients.
 - **Verification**: Visual inspection of rendered tokens and zero CSS parse errors.
 
 ### Task 3: IndexedDB Storage & Auto-Recovery Service
@@ -49,10 +51,10 @@ Scaffold the Next.js frontend application with an ultra-modern aesthetic design 
   - `frontend/src/components/DragDropZone.tsx`
   - `frontend/src/components/StagedFileCard.tsx`
 - **Actions**:
-  1. Build `Header`: studio logo, mode switcher (PDF Studio, Media Converter, Smart Compressor), and storage indicator.
-  2. Build `AutoRecoveryBanner`: floating alert when previous session exists with "Restore Session" and "Clear" buttons.
-  3. Build `DragDropZone`: universal drag-and-drop area with glowing border on drag-over, file picker trigger, and supported format pills (PDF, Video, Audio, Images).
-  4. Build `StagedFileCard`: displays file name, type badge, size badge, thumbnail preview, and contextual tool actions.
+  1. Build `Header`: studio branding, mode switcher (PDF Studio, Media Converter, Smart Compressor), and storage status badge.
+  2. Build `AutoRecoveryBanner`: clean floating alert with "Restore Session" and "Dismiss" buttons.
+  3. Build `DragDropZone`: minimal daylight drag-and-drop zone with clean tactile borders, file picker trigger, and format badges (PDF, Video, Audio, Image).
+  4. Build `StagedFileCard`: tactile solid white card displaying file name, format badge, size indicator, thumbnail preview, and contextual tool actions.
 - **Verification**: Component rendering without errors.
 
 ### Task 5: Main Studio Page Assembly
@@ -60,7 +62,7 @@ Scaffold the Next.js frontend application with an ultra-modern aesthetic design 
   - `frontend/src/app/layout.tsx`
   - `frontend/src/app/page.tsx`
 - **Actions**:
-  1. Assemble layout with SEO metadata (title, description, viewport, favicon).
+  1. Assemble layout with SEO metadata and daylight typography.
   2. Build main page state:
      - `stagedFiles`: list of active files.
      - `activeTab`: 'pdf' | 'converter' | 'compressor'.
@@ -70,6 +72,6 @@ Scaffold the Next.js frontend application with an ultra-modern aesthetic design 
 
 ### Task 6: Comprehensive Verification & Build Test
 - **Actions**:
-  1. Run `npm run build` or `npx tsc --noEmit` to verify TypeScript compile with 0 errors.
+  1. Run `npx tsc --noEmit` to verify TypeScript compile with 0 errors.
   2. Verify dev server runs cleanly on port 3000.
-  3. Check browser DOM rendering and test IndexedDB persistence across page reloads.
+  3. Verify IndexedDB persistence and auto-recovery in browser session.

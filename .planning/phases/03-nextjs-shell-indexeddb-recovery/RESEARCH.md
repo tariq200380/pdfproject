@@ -1,17 +1,27 @@
 # Phase 3 Research: Next.js Shell & IndexedDB Recovery
 
-## 1. Ultra-Modern UI/UX Design System
+## 1. Minimal Daylight Aesthetic Design System
 
 ### 1.1 Visual Tokens & Aesthetic Architecture
-- **Color Palette**: Sophisticated dark theme with deep obsidian backdrop (`#090a0f`), elevated card surfaces (`#12151e`), borders with subtle luminescence (`rgba(255, 255, 255, 0.08)`), and electric violet-cyan gradient accents (`linear-gradient(135deg, #6366f1, #06b6d4)`).
-- **Glassmorphism**: Backdrop blur (`backdrop-filter: blur(16px)`) with semi-transparent tinted panels for control overlays, navigation headers, and modal dialogs.
-- **Typography**: Clean, geometric sans-serif (Inter / Geist font stacks) with tight letter-spacing for headings (`-0.02em`) and high-legibility tabular figures for metrics.
-- **Motion & Micro-interactions**: Smooth 150–250ms cubic-bezier transitions (`cubic-bezier(0.16, 1, 0.3, 1)`), hover elevation shifts, and animated drag-over borders with glowing pulse effects.
+- **Palette**: Clean natural daylighting on a crisp off-white / light-grey canvas.
+  - Background Canvas: `#f8fafc` (crisp daylight neutral)
+  - Card & Surface: `#ffffff` (pure tactile solid white)
+  - Surface Muted / Inset: `#f1f5f9` (clean secondary surface)
+  - Borders: `#e2e8f0` (sharp, crisp 1px borders with zero blur)
+  - Text Primary: `#0f172a` (deep slate for maximum contrast and legibility)
+  - Text Secondary: `#64748b` (balanced neutral grey)
+  - Primary Accent: `#0f172a` (refined solid charcoal/black button actions)
+  - Accent Interactive: `#2563eb` (crisp editorial royal blue for active tabs/links)
+- **Tactile Solids**: Zero glassmorphism, zero backdrop blur, zero neon glow. Instead, sharp, solid surfaces with subtle tactile depth:
+  - Default Card: `background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);`
+  - Active / Hover Card: `border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);`
+- **Typography**: Crisp modern sans-serif (Inter / Geist font stack), strict hierarchy, high legibility.
+- **Controls & Buttons**: Solid filled primary buttons (`#0f172a` text `#ffffff`), crisp bordered secondary buttons (`#ffffff` border `#e2e8f0`), zero glowing outlines.
 
 ### 1.2 Layout & Workspace Topology
-- **Top Navigation**: Studio branding, active mode selector (PDF Studio, Media Converter, Smart Compressor), and session cache indicator.
-- **Hero Staging Zone**: High-impact universal drag-and-drop container with auto-detection for PDF, Image, Audio, and Video files.
-- **Staging Drawer / File Grid**: Dynamic staged file cards with format pill badges, size indicators, live image/PDF thumbnail previews, and contextual operation action bars.
+- **Top Navigation**: Clean editorial studio header with crisp border-bottom, mode switcher pills, and session storage status.
+- **Hero Staging Zone**: High-impact, minimal dashed/solid staging area with clean daylight styling.
+- **Staging Cards**: Tactile white cards displaying file names, format pill badges (PDF, Video, Audio, Image), size indicators, live preview thumbnails, and operation triggers.
 
 ---
 
@@ -45,7 +55,7 @@ Native browser `indexedDB` database: `OmniStudioDB` (Version 1).
   4. Automatically delete expired items using a readwrite transaction.
   5. If valid unexpired items remain:
      - Set state `hasRecoverableSession = true`.
-     - Render sleek floating recovery prompt: *"Previous workspace session found (3 files, saved 18m ago). [Restore Session] [Dismiss]"*.
+     - Render minimal floating daylight alert: *"Previous workspace session found (3 files, saved 15m ago). [Restore Session] [Dismiss]"*.
 - **On Restore**:
   - Load cached blobs into React memory state as standard `File` objects so the user can continue editing immediately without re-uploading.
 - **On Manual Clear**:

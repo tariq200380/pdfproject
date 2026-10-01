@@ -1,0 +1,265 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { ActiveStudioTab, StagedFile } from '@/lib/types';
+import { detectCategory, indexedDBService } from '@/lib/indexedDbService';
+import { Header } from '@/components/Header';
+import { AutoRecoveryBanner } from '@/components/AutoRecoveryBanner';
+import { DragDropZone } from '@/components/DragDropZone';
+import { StagedFileCard } from '@/components/StagedFileCard';
+import { Trash2, Plus, Sparkles, Shield, Cpu, RefreshCw, FileText } from 'lucide-react';
+
+export default function StudioHomePage() {
+  const [activeTab, setActiveTab] = useState<ActiveStudioTab>('pdf');
+  const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
+  const [recoverableData, setRecoverableData] = useState<{ files: StagedFile[]; savedAt: number } | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [activeNotice, setActiveNotice] = useState<string | null>(null);
+
+  // Check for IndexedDB auto-recovery on mount
+  useEffect(() => {
+    async function checkRecovery() {
+      try {
+        const result = await indexedDBService.getRecoverableFiles();
+        if (result.files.length > 0) {
+          setRecoverableData({ files: result.files, savedAt: result.lastSavedAt });
+        }
+      } catch (err) {
+        console.warn('IndexedDB check error:', err);
+      }
+    }
+    checkRecovery();
+  }, []);
+
+  const handleFilesSelected = async (newFiles: File[]) => {
+    const updated = [...stagedFiles];
+
+    for (const f of newFiles) {
+      const category = detectCategory(f);
+      try {
+        const id = await indexedDBService.saveFile(f, category);
+        const previewUrl = category === 'image' || f.type.startsWith('image/')
+          ? URL.createObjectURL(f)
+          : undefined;
+
+        updated.push({
+          id,
+          name: f.name,
+          size: f.size,
+          type: f.type,
+          category,
+          file: f,
+          previewUrl,
+          updatedAt: Date.now(),
+        });
+      } catch (err) {
+        console.error('Failed to save file to IndexedDB:', err);
+      }
+    }
+
+    setStagedFiles(updated);
+  };
+
+  const handleRemove = async (id: string) => {
+    try {
+      await indexedDBService.removeFile(id);
+    } catch (err) {
+      console.warn('Failed to remove file from IndexedDB:', err);
+    }
+    setStagedFiles((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await indexedDBService.clearWorkspace();
+    } catch (err) {
+      console.warn('Failed to clear workspace:', err);
+    }
+    setStagedFiles([]);
+    setRecoverableData(null);
+  };
+
+  const handleRestoreSession = () => {
+    if (recoverableData && recoverableData.files.length > 0) {
+      setStagedFiles(recoverableData.files);
+      setRecoverableData(null);
+    }
+  };
+
+  const handleSelectAction = (file: StagedFile, action: string) => {
+    setActiveNotice(`Selected '${action}' on '${file.name}'. Action target loaded into active workspace.`);
+    setTimeout(() => setActiveNotice(null), 5000);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Header
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        stagedCount={stagedFiles.length}
+      />
+
+      <main style={{ flex: 1, padding: '0 24px 60px 24px' }}>
+        {/* Floating Auto-Recovery Banner */}
+        {recoverableData && !bannerDismissed && stagedFiles.length === 0 && (
+          <AutoRecoveryBanner
+            count={recoverableData.files.length}
+            lastSavedAt={recoverableData.savedAt}
+            onRestore={handleRestoreSession}
+            onClear={handleClearAll}
+            onDismiss={() => setBannerDismissed(true)}
+          />
+        )}
+
+        {/* Transient Notice Toast */}
+        {activeNotice && (
+          <div style={{
+            maxWidth: '1100px',
+            margin: '16px auto 0 auto',
+            padding: '10px 16px',
+            backgroundColor: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            borderRadius: '6px',
+            color: '#166534',
+            fontSize: '13px',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            <Sparkles size={16} />
+            {activeNotice}
+          </div>
+        )}
+
+        {/* Drag & Drop Staging Area */}
+        <DragDropZone onFilesSelected={handleFilesSelected} />
+
+        {/* Staged Files Section */}
+        {stagedFiles.length > 0 && (
+          <section style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '14px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
+                  Staged Workspace Files
+                </h3>
+                <span style={{
+                  fontSize: '12px',
+                  color: '#64748b',
+                  backgroundColor: '#f1f5f9',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontWeight: 500,
+                }}>
+                  {stagedFiles.length}
+                </span>
+              </div>
+
+              <button
+                onClick={handleClearAll}
+                className="btn btn-secondary"
+                style={{ padding: '6px 12px', fontSize: '12px' }}
+              >
+                <Trash2 size={13} />
+                Clear Workspace
+              </button>
+            </div>
+
+            <div>
+              {stagedFiles.map((file) => (
+                <StagedFileCard
+                  key={file.id}
+                  stagedFile={file}
+                  onRemove={handleRemove}
+                  onSelectAction={handleSelectAction}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Feature Highlights Grid */}
+        {stagedFiles.length === 0 && (
+          <section style={{
+            maxWidth: '1100px',
+            margin: '40px auto 0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '20px',
+          }}>
+            <div className="solid-card" style={{ padding: '24px' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#fee2e2',
+                color: '#b91c1c',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '14px',
+              }}>
+                <FileText size={20} />
+              </div>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                Seamless In-Place PDF Editor
+              </h4>
+              <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                Click directly on PDF text to edit in-place. Automatically extracts original font family, size, baseline, and color so edits blend imperceptibly.
+              </p>
+            </div>
+
+            <div className="solid-card" style={{ padding: '24px' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#e0f2fe',
+                color: '#0369a1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '14px',
+              }}>
+                <RefreshCw size={20} />
+              </div>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                Universal Media Converters
+              </h4>
+              <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                Convert across MP3, WAV, AAC, FLAC, OGG, and transcode video containers (MP4, MKV, AVI, WEBM, MOV) with hardware-accelerated FFmpeg.
+              </p>
+            </div>
+
+            <div className="solid-card" style={{ padding: '24px' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#ecfdf5',
+                color: '#047857',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '14px',
+              }}>
+                <Shield size={20} />
+              </div>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                Stateless & Auto-Recoverable
+              </h4>
+              <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                Zero registration or tracking. Active files are cached in your browser IndexedDB with a 3-hour auto-recovery TTL so accidental closes never lose your work.
+              </p>
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
+  );
+}
