@@ -27,15 +27,15 @@ export const StagedFileCard: React.FC<StagedFileCardProps> = ({
   const getIcon = () => {
     switch (stagedFile.category) {
       case 'pdf':
-        return <FileText size={20} color="#b91c1c" />;
+        return <FileText size={22} color="#b91c1c" />;
       case 'image':
-        return <ImageIcon size={20} color="#047857" />;
+        return <ImageIcon size={22} color="#047857" />;
       case 'video':
-        return <Video size={20} color="#6d28d9" />;
+        return <Video size={22} color="#6d28d9" />;
       case 'audio':
-        return <Music size={20} color="#0369a1" />;
+        return <Music size={22} color="#0369a1" />;
       default:
-        return <FileText size={20} color="#475569" />;
+        return <FileText size={22} color="#475569" />;
     }
   };
 
@@ -58,33 +58,34 @@ export const StagedFileCard: React.FC<StagedFileCardProps> = ({
     <div
       className="solid-card"
       style={{
-        padding: '14px 18px',
+        padding: '16px 22px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '16px',
-        marginBottom: '10px',
+        gap: '18px',
+        marginBottom: '12px',
       }}
     >
       {/* File Info */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
         {stagedFile.previewUrl ? (
           <img
             src={stagedFile.previewUrl}
             alt={stagedFile.name}
             style={{
-              width: '40px',
-              height: '40px',
+              width: '46px',
+              height: '46px',
               objectFit: 'cover',
-              borderRadius: '6px',
+              borderRadius: '8px',
               border: '1px solid #e2e8f0',
+              flexShrink: 0,
             }}
           />
         ) : (
           <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '6px',
+            width: '46px',
+            height: '46px',
+            borderRadius: '8px',
             backgroundColor: '#f8fafc',
             border: '1px solid #e2e8f0',
             display: 'flex',
@@ -98,7 +99,7 @@ export const StagedFileCard: React.FC<StagedFileCardProps> = ({
 
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{
-            fontSize: '14px',
+            fontSize: '15px',
             fontWeight: 600,
             color: '#0f172a',
             overflow: 'hidden',
@@ -107,29 +108,29 @@ export const StagedFileCard: React.FC<StagedFileCardProps> = ({
           }}>
             {stagedFile.name}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '3px' }}>
             <span className={`badge ${getBadgeClass()}`}>{stagedFile.category}</span>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>{formatBytes(stagedFile.size)}</span>
+            <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>{formatBytes(stagedFile.size)}</span>
           </div>
         </div>
       </div>
 
       {/* Contextual Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {stagedFile.category === 'pdf' && (
           <>
             <button
               onClick={() => onSelectAction(stagedFile, 'edit-text')}
               className="btn btn-primary"
-              style={{ padding: '6px 12px', fontSize: '12px' }}
+              style={{ padding: '8px 16px', fontSize: '13px' }}
             >
               In-Place Editor
-              <ArrowRight size={13} />
+              <ArrowRight size={14} />
             </button>
             <button
               onClick={() => onSelectAction(stagedFile, 'split')}
               className="btn btn-secondary"
-              style={{ padding: '6px 10px', fontSize: '12px' }}
+              style={{ padding: '8px 14px', fontSize: '13px' }}
             >
               Split / Burst
             </button>
@@ -141,14 +142,14 @@ export const StagedFileCard: React.FC<StagedFileCardProps> = ({
             <button
               onClick={() => onSelectAction(stagedFile, 'convert-to-pdf')}
               className="btn btn-primary"
-              style={{ padding: '6px 12px', fontSize: '12px' }}
+              style={{ padding: '8px 16px', fontSize: '13px' }}
             >
               Convert to PDF
             </button>
             <button
               onClick={() => onSelectAction(stagedFile, 'compress-image')}
               className="btn btn-secondary"
-              style={{ padding: '6px 10px', fontSize: '12px' }}
+              style={{ padding: '8px 14px', fontSize: '13px' }}
             >
               Compress
             </button>
@@ -160,14 +161,14 @@ export const StagedFileCard: React.FC<StagedFileCardProps> = ({
             <button
               onClick={() => onSelectAction(stagedFile, 'convert-media')}
               className="btn btn-primary"
-              style={{ padding: '6px 12px', fontSize: '12px' }}
+              style={{ padding: '8px 16px', fontSize: '13px' }}
             >
               Convert Format
             </button>
             <button
               onClick={() => onSelectAction(stagedFile, 'compress-media')}
               className="btn btn-secondary"
-              style={{ padding: '6px 10px', fontSize: '12px' }}
+              style={{ padding: '8px 14px', fontSize: '13px' }}
             >
               Compress
             </button>
@@ -181,17 +182,17 @@ export const StagedFileCard: React.FC<StagedFileCardProps> = ({
             border: 'none',
             color: '#94a3b8',
             cursor: 'pointer',
-            padding: '6px',
+            padding: '8px',
             display: 'flex',
             alignItems: 'center',
-            borderRadius: '4px',
+            borderRadius: '6px',
             transition: 'color 0.15s ease',
           }}
           onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = '#dc2626')}
           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = '#94a3b8')}
           title="Remove file"
         >
-          <Trash2 size={16} />
+          <Trash2 size={17} />
         </button>
       </div>
     </div>

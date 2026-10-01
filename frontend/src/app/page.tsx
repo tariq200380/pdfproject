@@ -138,7 +138,7 @@ export default function StudioHomePage() {
         stagedCount={stagedFiles.length}
       />
 
-      <main style={{ flex: 1, padding: '0 24px 60px 24px' }}>
+      <main style={{ flex: 1, padding: '0 32px 80px 32px' }}>
         {/* Floating Auto-Recovery Banner */}
         {recoverableData && !bannerDismissed && stagedFiles.length === 0 && (
           <AutoRecoveryBanner
@@ -154,19 +154,20 @@ export default function StudioHomePage() {
         {activeNotice && (
           <div style={{
             maxWidth: '1100px',
-            margin: '16px auto 0 auto',
-            padding: '10px 16px',
+            margin: '20px auto 0 auto',
+            padding: '12px 20px',
             backgroundColor: '#f0fdf4',
             border: '1px solid #bbf7d0',
-            borderRadius: '6px',
+            borderRadius: '8px',
             color: '#166534',
-            fontSize: '13px',
-            fontWeight: 500,
+            fontSize: '14px',
+            fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: '10px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}>
-            <Sparkles size={16} />
+            <Sparkles size={18} />
             {activeNotice}
           </div>
         )}
@@ -195,24 +196,25 @@ export default function StudioHomePage() {
 
             {/* Staged Files Section */}
             {stagedFiles.length > 0 && (
-              <section style={{ maxWidth: '1100px', margin: '0 auto' }}>
+              <section style={{ maxWidth: '1100px', margin: '32px auto 0 auto' }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: '14px',
+                  marginBottom: '16px',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>
                       Staged Workspace Files
                     </h3>
                     <span style={{
                       fontSize: '12px',
-                      color: '#64748b',
+                      color: '#0f172a',
                       backgroundColor: '#f1f5f9',
-                      padding: '2px 8px',
+                      border: '1px solid #cbd5e1',
+                      padding: '3px 10px',
                       borderRadius: '12px',
-                      fontWeight: 500,
+                      fontWeight: 700,
                     }}>
                       {stagedFiles.length}
                     </span>
@@ -221,9 +223,9 @@ export default function StudioHomePage() {
                   <button
                     onClick={handleClearAll}
                     className="btn btn-secondary"
-                    style={{ padding: '6px 12px', fontSize: '12px' }}
+                    style={{ padding: '8px 16px', fontSize: '13px' }}
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={14} />
                     Clear Workspace
                   </button>
                 </div>
@@ -245,73 +247,76 @@ export default function StudioHomePage() {
             {stagedFiles.length === 0 && (
               <section style={{
                 maxWidth: '1100px',
-                margin: '40px auto 0 auto',
+                margin: '48px auto 0 auto',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '20px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '24px',
               }}>
-                <div className="solid-card" style={{ padding: '24px' }}>
+                <div className="solid-card" style={{ padding: '32px' }}>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '8px',
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '10px',
                     backgroundColor: '#fee2e2',
                     color: '#b91c1c',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginBottom: '14px',
+                    marginBottom: '18px',
+                    boxShadow: '0 2px 4px rgba(185, 28, 28, 0.08)',
                   }}>
-                    <FileText size={20} />
+                    <FileText size={22} />
                   </div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                  <h4 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.015em' }}>
                     Seamless In-Place PDF Editor
                   </h4>
-                  <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                  <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6', margin: 0 }}>
                     Click directly on PDF text to edit in-place. Automatically extracts original font family, size, baseline, and color so edits blend imperceptibly.
                   </p>
                 </div>
 
-                <div className="solid-card" style={{ padding: '24px' }}>
+                <div className="solid-card" style={{ padding: '32px' }}>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '8px',
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '10px',
                     backgroundColor: '#e0f2fe',
                     color: '#0369a1',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginBottom: '14px',
+                    marginBottom: '18px',
+                    boxShadow: '0 2px 4px rgba(3, 105, 161, 0.08)',
                   }}>
-                    <RefreshCw size={20} />
+                    <RefreshCw size={22} />
                   </div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                  <h4 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.015em' }}>
                     Universal Media Converters
                   </h4>
-                  <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                  <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6', margin: 0 }}>
                     Convert across MP3, WAV, AAC, FLAC, OGG, and transcode video containers (MP4, MKV, AVI, WEBM, MOV) with hardware-accelerated FFmpeg.
                   </p>
                 </div>
 
-                <div className="solid-card" style={{ padding: '24px' }}>
+                <div className="solid-card" style={{ padding: '32px' }}>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '8px',
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '10px',
                     backgroundColor: '#ecfdf5',
                     color: '#047857',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginBottom: '14px',
+                    marginBottom: '18px',
+                    boxShadow: '0 2px 4px rgba(4, 120, 87, 0.08)',
                   }}>
-                    <Shield size={20} />
+                    <Shield size={22} />
                   </div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                  <h4 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.015em' }}>
                     Stateless & Auto-Recoverable
                   </h4>
-                  <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                  <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6', margin: 0 }}>
                     Zero registration or tracking. Active files are cached in your browser IndexedDB with a 3-hour auto-recovery TTL so accidental closes never lose your work.
                   </p>
                 </div>
