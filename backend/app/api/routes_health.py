@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 from backend.app.core.config import settings
 from backend.app.core.sandbox import sandbox_manager
+from backend.app.services.ffmpeg_service import ffmpeg_service
 
 router = APIRouter(tags=["Health"])
 
@@ -15,4 +16,5 @@ async def health_check():
         "service": settings.PROJECT_NAME,
         "ephemeral_storage": str(sandbox_manager.base_dir),
         "session_ttl_minutes": settings.SESSION_TTL_MINUTES,
+        "ffmpeg_available": ffmpeg_service.is_available(),
     }

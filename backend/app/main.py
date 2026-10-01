@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.routes_health import router as health_router
 from backend.app.api.routes_pdf import router as pdf_router
+from backend.app.api.routes_media import router as media_router
+from backend.app.api.routes_compress import router as compress_router
 from backend.app.core.config import settings
 from backend.app.core.sandbox import sandbox_manager
 
@@ -46,6 +48,8 @@ app.add_middleware(
 # Register API Routers
 app.include_router(health_router, prefix=settings.API_PREFIX)
 app.include_router(pdf_router, prefix=settings.API_PREFIX)
+app.include_router(media_router, prefix=settings.API_PREFIX)
+app.include_router(compress_router, prefix=settings.API_PREFIX)
 
 
 @app.get("/")

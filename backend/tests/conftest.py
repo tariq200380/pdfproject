@@ -70,3 +70,49 @@ def multi_page_pdf_file(tmp_path, multi_page_pdf_bytes) -> Path:
     path = tmp_path / "multipage.pdf"
     path.write_bytes(multi_page_pdf_bytes)
     return path
+
+
+@pytest.fixture(scope="session")
+def synthetic_wav_file(tmp_path_factory) -> Path:
+    """Generates a 1-second synthetic 440Hz sine wave WAV file."""
+    import subprocess
+    tmp_dir = tmp_path_factory.mktemp("audio_fixtures")
+    wav_path = tmp_dir / "test_sine.wav"
+    subprocess.run(
+        [
+            "ffmpeg", "-y",
+            "-f", "lavfi",
+            "-i", "sine=frequency=440:duration=1",
+            "-ar", "44100",
+            "-ac", "2",
+            str(wav_path),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    return wav_path
+
+
+@pytest.fixture(scope="session")
+def synthetic_mp4_file(tmp_path_factory) -> Path:
+    """Generates a 1-second synthetic 640x360 test video file."""
+    import subprocess
+    tmp_dir = tmp_path_factory.mktemp("video_fixtures")
+    mp4_path = tmp_dir / "test_pattern.mp4"
+    subprocess.run(
+        [
+            "ffmpeg", "-y",
+            "-f", "lavfi",
+            "-i", "testsrc=duration=1:size=640x360:rate=15",
+            "-f", "lavfi",
+            "-i", "sine=frequency=440:duration=1",
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            str(mp4_path),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    return mp4_path
+
