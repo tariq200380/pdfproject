@@ -395,18 +395,61 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     })
     .filter((sec) => sec.tools.length > 0);
 
-  const getAcceptedFormats = () => {
-    if (!activeModalTool) return '.pdf,application/pdf';
+  const getAcceptedFormats = (): string | undefined => {
+    if (!activeModalTool) return undefined;
+    // For video and audio tools, return undefined so no restrictive accept attribute is attached,
+    // preventing Ubuntu/GTK dialogs from hiding valid media files behind "Custom Files".
+    if (
+      activeModalTool.id === 'convert-video' ||
+      activeModalTool.id === 'compress-video' ||
+      activeModalTool.id === 'convert-audio' ||
+      activeModalTool.id === 'compress-audio' ||
+      activeModalTool.id.includes('video') ||
+      activeModalTool.id.includes('audio') ||
+      activeModalTool.id.includes('media') ||
+      activeModalTool.id.includes('universal')
+    ) {
+      return undefined;
+    }
     if (activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'compress-image') {
-      return 'image/*,.png,.jpg,.jpeg,.webp,.heic,.heif,.bmp,.tiff,.tif,.gif';
-    }
-    if (activeModalTool.id === 'convert-video' || activeModalTool.id === 'compress-video') {
-      return 'video/*,.mp4,.mov,.mkv,.avi,.webm';
-    }
-    if (activeModalTool.id === 'convert-audio' || activeModalTool.id === 'compress-audio') {
-      return 'audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a';
+      return 'image/*,.png,.jpg,.jpeg,.webp,.heic,.heif,.bmp,.tiff,.tif,.gif,*';
     }
     return '.pdf,application/pdf';
+  };
+
+  const validateSelectedFiles = (files: File[], toolId: string): { valid: boolean; error?: string } => {
+    if (files.length === 0) return { valid: false, error: 'No file selected.' };
+
+    const isVideoTool = toolId === 'convert-video' || toolId === 'compress-video' || toolId.includes('video');
+    const isAudioTool = toolId === 'convert-audio' || toolId === 'compress-audio' || toolId.includes('audio');
+    const isImageTool = toolId === 'images-to-pdf' || toolId === 'compress-image' || toolId.includes('image');
+    const isPdfTool = !isVideoTool && !isAudioTool && !isImageTool && toolId !== 'universal-converter';
+
+    const videoExts = new Set(['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', 'm4v', '3gp', 'ts', 'ogv', 'gif', 'mp3']);
+    const audioExts = new Set(['mp3', 'wav', 'aac', 'flac', 'ogg', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'mp4', 'mkv', 'webm', 'mov']);
+    const imageExts = new Set(['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'bmp', 'tiff', 'tif', 'gif', 'svg']);
+
+    for (const f of files) {
+      const ext = f.name.split('.').pop()?.toLowerCase() || '';
+      if (isVideoTool) {
+        if (!f.type.startsWith('video/') && !videoExts.has(ext) && f.type !== '') {
+          return { valid: false, error: `"${f.name}" does not appear to be a video file. Please select a valid video (.mp4, .mkv, .avi, .mov, .webm, etc.).` };
+        }
+      } else if (isAudioTool) {
+        if (!f.type.startsWith('audio/') && !audioExts.has(ext) && f.type !== '') {
+          return { valid: false, error: `"${f.name}" does not appear to be an audio file. Please select a valid audio (.mp3, .wav, .aac, .m4a, .flac, .ogg, etc.).` };
+        }
+      } else if (isImageTool) {
+        if (!f.type.startsWith('image/') && !imageExts.has(ext) && f.type !== '') {
+          return { valid: false, error: `"${f.name}" does not appear to be an image file. Please select an image (.jpg, .png, .webp, .heic, etc.).` };
+        }
+      } else if (isPdfTool) {
+        if (f.type !== 'application/pdf' && ext !== 'pdf' && f.type !== '') {
+          return { valid: false, error: `"${f.name}" is not a PDF file. Please select a valid PDF document (.pdf).` };
+        }
+      }
+    }
+    return { valid: true };
   };
 
   const getToolFormatDescription = () => {
@@ -415,7 +458,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
       return 'Supports all image formats (JPG, PNG, WEBP, HEIC, TIFF, BMP, GIF)';
     }
     if (activeModalTool.id === 'convert-video' || activeModalTool.id === 'compress-video') {
-      return 'Supports standard video formats (MP4, MOV, MKV, AVI, WEBM)';
+      return 'Supports standard video formats (MP4, MOV, MKV, AVI, WEBM, FLV, WMV)';
     }
     if (activeModalTool.id === 'convert-audio' || activeModalTool.id === 'compress-audio') {
       return 'Supports standard audio formats (MP3, WAV, AAC, FLAC, OGG, M4A)';
@@ -465,9 +508,17 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
+      const validation = validateSelectedFiles(files, activeModalTool?.id || '');
+      if (!validation.valid) {
+        setErrorMessage(validation.error || 'Invalid file format');
+        e.target.value = '';
+        return;
+      }
+
       if (activeModalTool?.id === 'edit-pdf' && onOpenEditor) {
         setActiveModalTool(null);
         onOpenEditor(files[0]);
+        e.target.value = '';
         return;
       }
       const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages' || activeModalTool?.id === 'images-to-pdf';
@@ -481,6 +532,8 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         setTargetFormat(firstExt === 'mp4' ? 'mkv' : 'mp4');
       }
     }
+    // Always reset input value so selecting the same file consecutively triggers onChange
+    e.target.value = '';
   };
 
   const handleDropFiles = (e: React.DragEvent<HTMLDivElement>) => {
@@ -489,6 +542,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     if (isProcessing) return;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const files = Array.from(e.dataTransfer.files);
+      const validation = validateSelectedFiles(files, activeModalTool?.id || '');
+      if (!validation.valid) {
+        setErrorMessage(validation.error || 'Invalid file format');
+        return;
+      }
+
       if (activeModalTool?.id === 'edit-pdf' && onOpenEditor) {
         setActiveModalTool(null);
         onOpenEditor(files[0]);

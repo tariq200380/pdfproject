@@ -208,6 +208,8 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
       setSelectedFiles(activeConverter?.multiple ? filesArray : [filesArray[0]]);
       setErrorMessage(null);
     }
+    // Always reset input value so selecting the same file consecutively triggers onChange
+    e.target.value = '';
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -704,7 +706,7 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept={activeConverter.accept}
+                    accept={activeConverter.id === 'universal-converter' ? undefined : activeConverter.accept}
                     multiple={Boolean(activeConverter.multiple)}
                     onChange={handleFileChange}
                     style={{ display: 'none' }}

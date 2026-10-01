@@ -82,7 +82,7 @@ export const DragDropZone: React.FC<DragDropZoneProps> = ({ onFilesSelected, acc
         ref={inputRef}
         type="file"
         multiple
-        accept={accept}
+        accept={accept === UNIVERSAL_ACCEPT ? undefined : accept}
         style={{ display: 'none' }}
         onChange={handleInputChange}
       />
