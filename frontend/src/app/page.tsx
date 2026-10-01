@@ -8,7 +8,9 @@ import { AutoRecoveryBanner } from '@/components/AutoRecoveryBanner';
 import { DragDropZone } from '@/components/DragDropZone';
 import { StagedFileCard } from '@/components/StagedFileCard';
 import { PdfEditorWorkspace } from '@/components/pdf/PdfEditorWorkspace';
-import { Trash2, Plus, Sparkles, Shield, Cpu, RefreshCw, FileText } from 'lucide-react';
+import { MediaConverterWorkspace } from '@/components/converter/MediaConverterWorkspace';
+import { SmartCompressorWorkspace } from '@/components/compressor/SmartCompressorWorkspace';
+import { Trash2, Sparkles, Shield, RefreshCw, FileText } from 'lucide-react';
 
 export default function StudioHomePage() {
   const [activeTab, setActiveTab] = useState<ActiveStudioTab>('pdf');
@@ -17,6 +19,7 @@ export default function StudioHomePage() {
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [activeNotice, setActiveNotice] = useState<string | null>(null);
   const [activeEditingPdf, setActiveEditingPdf] = useState<File | null>(null);
+  const [preselectedFileId, setPreselectedFileId] = useState<string | undefined>(undefined);
 
   // Check for IndexedDB auto-recovery on mount
   useEffect(() => {
@@ -69,6 +72,9 @@ export default function StudioHomePage() {
       console.warn('Failed to remove file from IndexedDB:', err);
     }
     setStagedFiles((prev) => prev.filter((item) => item.id !== id));
+    if (preselectedFileId === id) {
+      setPreselectedFileId(undefined);
+    }
   };
 
   const handleClearAll = async () => {
@@ -79,6 +85,7 @@ export default function StudioHomePage() {
     }
     setStagedFiles([]);
     setRecoverableData(null);
+    setPreselectedFileId(undefined);
   };
 
   const handleRestoreSession = () => {
@@ -93,6 +100,21 @@ export default function StudioHomePage() {
       setActiveEditingPdf(file.file);
       return;
     }
+    if (action === 'split' && file.category === 'pdf') {
+      setActiveEditingPdf(file.file);
+      return;
+    }
+    if (action === 'convert-to-pdf' || action === 'convert-media') {
+      setPreselectedFileId(file.id);
+      setActiveTab('converter');
+      return;
+    }
+    if (action === 'compress-image' || action === 'compress-media') {
+      setPreselectedFileId(file.id);
+      setActiveTab('compressor');
+      return;
+    }
+
     setActiveNotice(`Selected '${action}' on '${file.name}'. Ready for processing.`);
     setTimeout(() => setActiveNotice(null), 5000);
   };
@@ -110,7 +132,9 @@ export default function StudioHomePage() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+        }}
         stagedCount={stagedFiles.length}
       />
 
@@ -147,132 +171,153 @@ export default function StudioHomePage() {
           </div>
         )}
 
-        {/* Drag & Drop Staging Area */}
-        <DragDropZone onFilesSelected={handleFilesSelected} />
-
-        {/* Staged Files Section */}
-        {stagedFiles.length > 0 && (
-          <section style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '14px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
-                  Staged Workspace Files
-                </h3>
-                <span style={{
-                  fontSize: '12px',
-                  color: '#64748b',
-                  backgroundColor: '#f1f5f9',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontWeight: 500,
-                }}>
-                  {stagedFiles.length}
-                </span>
-              </div>
-
-              <button
-                onClick={handleClearAll}
-                className="btn btn-secondary"
-                style={{ padding: '6px 12px', fontSize: '12px' }}
-              >
-                <Trash2 size={13} />
-                Clear Workspace
-              </button>
-            </div>
-
-            <div>
-              {stagedFiles.map((file) => (
-                <StagedFileCard
-                  key={file.id}
-                  stagedFile={file}
-                  onRemove={handleRemove}
-                  onSelectAction={handleSelectAction}
-                />
-              ))}
-            </div>
-          </section>
+        {/* Tab-driven View */}
+        {activeTab === 'converter' && (
+          <MediaConverterWorkspace
+            stagedFiles={stagedFiles}
+            initialFileId={preselectedFileId}
+            onBack={() => setActiveTab('pdf')}
+          />
         )}
 
-        {/* Feature Highlights Grid */}
-        {stagedFiles.length === 0 && (
-          <section style={{
-            maxWidth: '1100px',
-            margin: '40px auto 0 auto',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '20px',
-          }}>
-            <div className="solid-card" style={{ padding: '24px' }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: '#fee2e2',
-                color: '#b91c1c',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '14px',
-              }}>
-                <FileText size={20} />
-              </div>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
-                Seamless In-Place PDF Editor
-              </h4>
-              <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
-                Click directly on PDF text to edit in-place. Automatically extracts original font family, size, baseline, and color so edits blend imperceptibly.
-              </p>
-            </div>
+        {activeTab === 'compressor' && (
+          <SmartCompressorWorkspace
+            stagedFiles={stagedFiles}
+            initialFileId={preselectedFileId}
+            onBack={() => setActiveTab('pdf')}
+          />
+        )}
 
-            <div className="solid-card" style={{ padding: '24px' }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: '#e0f2fe',
-                color: '#0369a1',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '14px',
-              }}>
-                <RefreshCw size={20} />
-              </div>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
-                Universal Media Converters
-              </h4>
-              <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
-                Convert across MP3, WAV, AAC, FLAC, OGG, and transcode video containers (MP4, MKV, AVI, WEBM, MOV) with hardware-accelerated FFmpeg.
-              </p>
-            </div>
+        {activeTab === 'pdf' && (
+          <>
+            {/* Drag & Drop Staging Area */}
+            <DragDropZone onFilesSelected={handleFilesSelected} />
 
-            <div className="solid-card" style={{ padding: '24px' }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: '#ecfdf5',
-                color: '#047857',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '14px',
+            {/* Staged Files Section */}
+            {stagedFiles.length > 0 && (
+              <section style={{ maxWidth: '1100px', margin: '0 auto' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '14px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
+                      Staged Workspace Files
+                    </h3>
+                    <span style={{
+                      fontSize: '12px',
+                      color: '#64748b',
+                      backgroundColor: '#f1f5f9',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontWeight: 500,
+                    }}>
+                      {stagedFiles.length}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={handleClearAll}
+                    className="btn btn-secondary"
+                    style={{ padding: '6px 12px', fontSize: '12px' }}
+                  >
+                    <Trash2 size={13} />
+                    Clear Workspace
+                  </button>
+                </div>
+
+                <div>
+                  {stagedFiles.map((file) => (
+                    <StagedFileCard
+                      key={file.id}
+                      stagedFile={file}
+                      onRemove={handleRemove}
+                      onSelectAction={handleSelectAction}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Feature Highlights Grid */}
+            {stagedFiles.length === 0 && (
+              <section style={{
+                maxWidth: '1100px',
+                margin: '40px auto 0 auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '20px',
               }}>
-                <Shield size={20} />
-              </div>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
-                Stateless & Auto-Recoverable
-              </h4>
-              <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
-                Zero registration or tracking. Active files are cached in your browser IndexedDB with a 3-hour auto-recovery TTL so accidental closes never lose your work.
-              </p>
-            </div>
-          </section>
+                <div className="solid-card" style={{ padding: '24px' }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#fee2e2',
+                    color: '#b91c1c',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '14px',
+                  }}>
+                    <FileText size={20} />
+                  </div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                    Seamless In-Place PDF Editor
+                  </h4>
+                  <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                    Click directly on PDF text to edit in-place. Automatically extracts original font family, size, baseline, and color so edits blend imperceptibly.
+                  </p>
+                </div>
+
+                <div className="solid-card" style={{ padding: '24px' }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#e0f2fe',
+                    color: '#0369a1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '14px',
+                  }}>
+                    <RefreshCw size={20} />
+                  </div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                    Universal Media Converters
+                  </h4>
+                  <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                    Convert across MP3, WAV, AAC, FLAC, OGG, and transcode video containers (MP4, MKV, AVI, WEBM, MOV) with hardware-accelerated FFmpeg.
+                  </p>
+                </div>
+
+                <div className="solid-card" style={{ padding: '24px' }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#ecfdf5',
+                    color: '#047857',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '14px',
+                  }}>
+                    <Shield size={20} />
+                  </div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
+                    Stateless & Auto-Recoverable
+                  </h4>
+                  <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+                    Zero registration or tracking. Active files are cached in your browser IndexedDB with a 3-hour auto-recovery TTL so accidental closes never lose your work.
+                  </p>
+                </div>
+              </section>
+            )}
+          </>
         )}
       </main>
     </div>
