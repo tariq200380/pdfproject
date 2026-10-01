@@ -7,6 +7,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ToolActionId } from '@/components/adobe/MegaMenu';
 import { ToolsGrid } from '@/components/adobe/ToolsGrid';
+import { AllConvertersGrid } from '@/components/converter/AllConvertersGrid';
 import { AutoRecoveryBanner } from '@/components/AutoRecoveryBanner';
 import { DragDropZone } from '@/components/DragDropZone';
 import { StagedFileCard } from '@/components/StagedFileCard';
@@ -126,7 +127,7 @@ export default function StudioHomePage() {
     if (toolId === 'all-tools') {
       setActiveTab('pdf');
       setTimeout(() => {
-        const elem = document.getElementById('adobe-tools-grid');
+        const elem = document.getElementById('all-converters-grid') || document.getElementById('adobe-tools-grid');
         if (elem) {
           elem.scrollIntoView({ behavior: 'smooth' });
         }
@@ -341,6 +342,9 @@ export default function StudioHomePage() {
                 </div>
               </section>
             )}
+
+            {/* 23 Adobe Acrobat Online Converters (Creed-Tech) */}
+            <AllConvertersGrid />
 
             {/* Adobe-Style Categorized Tools Grid */}
             <ToolsGrid onSelectTool={handleSelectTool} />

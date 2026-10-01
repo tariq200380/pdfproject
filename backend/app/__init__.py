@@ -1,1 +1,1 @@
-"""OmniMedia & PDF Studio Backend Application"""
+"""Creed-Tech Studio Backend Application"""

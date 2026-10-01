@@ -20,7 +20,7 @@ async def test_health_check():
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert "OmniMedia & PDF Studio" in data["service"]
+        assert "Creed-Tech Studio" in data["service"]
 
 
 @pytest.mark.asyncio

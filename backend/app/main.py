@@ -1,4 +1,4 @@
-"""FastAPI main application entrypoint for OmniMedia & PDF Studio."""
+"""FastAPI main application entrypoint for Creed-Tech Studio."""
 
 import logging
 from contextlib import asynccontextmanager
@@ -10,6 +10,7 @@ from backend.app.api.routes_health import router as health_router
 from backend.app.api.routes_pdf import router as pdf_router
 from backend.app.api.routes_media import router as media_router
 from backend.app.api.routes_compress import router as compress_router
+from backend.app.api.routes_converters import router as converters_router
 from backend.app.core.config import settings
 from backend.app.core.sandbox import sandbox_manager
 
@@ -17,16 +18,16 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("omnistudio.main")
+logger = logging.getLogger("creedtech.main")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manages background threads across application lifecycle."""
-    logger.info("Initializing OmniMedia & PDF Studio backend...")
+    logger.info("Initializing Creed-Tech Studio backend...")
     sandbox_manager.start_reaper()
     yield
-    logger.info("Shutting down OmniMedia & PDF Studio backend...")
+    logger.info("Shutting down Creed-Tech Studio backend...")
     sandbox_manager.stop_reaper()
 
 
@@ -76,6 +77,7 @@ app.include_router(health_router, prefix=settings.API_PREFIX)
 app.include_router(pdf_router, prefix=settings.API_PREFIX)
 app.include_router(media_router, prefix=settings.API_PREFIX)
 app.include_router(compress_router, prefix=settings.API_PREFIX)
+app.include_router(converters_router, prefix=settings.API_PREFIX)
 
 
 @app.get("/")

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# OmniMedia & PDF Studio: Unified Developer Startup Script
+# Creed-Tech Studio: Unified Developer Startup Script
 # ==============================================================================
 set -e
 
@@ -9,7 +9,7 @@ VENV_PYTHON="$PROJECT_ROOT/.venv/bin/python"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 
 echo "=========================================================="
-echo "  OmniMedia & PDF Studio - Starting Full-Stack Services"
+echo "  Creed-Tech Studio - Starting Full-Stack Services"
 echo "=========================================================="
 
 if [ ! -f "$VENV_PYTHON" ]; then
@@ -21,7 +21,7 @@ fi
 # Function to clean up background processes on exit
 cleanup() {
     echo ""
-    echo "[*] Shutting down OmniMedia Studio services..."
+    echo "[*] Shutting down Creed-Tech Studio services..."
     if [ -n "$BACKEND_PID" ]; then
         kill "$BACKEND_PID" 2>/dev/null || true
     fi
@@ -55,7 +55,7 @@ FRONTEND_PID=$!
 
 echo ""
 echo "=========================================================="
-echo "  OmniMedia Studio is running!"
+echo "  Creed-Tech Studio is running!"
 echo "  - Frontend: http://localhost:3000"
 echo "  - Backend API: http://127.0.0.1:8000/docs"
 echo "  Press Ctrl+C to terminate all services."

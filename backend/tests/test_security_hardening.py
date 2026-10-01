@@ -1,4 +1,4 @@
-"""Security, input validation, and hardening tests for OmniMedia & PDF Studio."""
+"""Security, input validation, and hardening tests for Creed-Tech Studio."""
 
 import io
 import pytest

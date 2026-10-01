@@ -1,14 +1,14 @@
-"""Configuration settings for OmniMedia & PDF Studio backend."""
+"""Configuration settings for Creed-Tech Studio backend."""
 
 import os
 from pathlib import Path
 
 class Settings:
-    PROJECT_NAME: str = "OmniMedia & PDF Studio"
+    PROJECT_NAME: str = "Creed-Tech Studio"
     API_PREFIX: str = "/api"
     
     # Sandbox & Ephemeral Storage
-    SANDBOX_BASE_DIR: Path = Path(os.getenv("SANDBOX_DIR", "/tmp/omnistudio_sandbox"))
+    SANDBOX_BASE_DIR: Path = Path(os.getenv("SANDBOX_DIR", "/tmp/creedtech_sandbox"))
     SESSION_TTL_MINUTES: int = int(os.getenv("SESSION_TTL_MINUTES", "15"))
     REAPER_INTERVAL_SECONDS: int = int(os.getenv("REAPER_INTERVAL_SECONDS", "300"))
     MAX_FILE_SIZE_MB: int = int(os.getenv("MAX_FILE_SIZE_MB", "100"))

@@ -4,7 +4,7 @@
 
 import { CachedWorkspaceItem, FileTypeCategory, StagedFile } from './types';
 
-const DB_NAME = 'OmniStudioDB';
+const DB_NAME = 'CreedTechStudioDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'workspace_files';
 const DEFAULT_TTL_HOURS = 3;
