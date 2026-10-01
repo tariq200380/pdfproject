@@ -448,7 +448,7 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                     cursor: 'pointer',
                   }}
                 >
-                  Try for free
+                  Convert
                 </button>
               </div>
             </div>
