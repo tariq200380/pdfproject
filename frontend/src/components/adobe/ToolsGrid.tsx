@@ -606,6 +606,18 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     const t2 = setTimeout(() => setProgress(88), 700);
 
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
+      const parseApiError = async (res: Response, fallback: string): Promise<string> => {
+        try {
+          const err = await res.json();
+          return err.detail || err.message || fallback;
+        } catch {
+          const text = await res.text().catch(() => '');
+          return text ? `${fallback}: ${text.slice(0, 150)}` : `${fallback} (HTTP ${res.status})`;
+        }
+      };
+
       const primaryFile = modalFiles[0];
       const stem = primaryFile?.name ? primaryFile.name.replace(/\.[^/.]+$/, '') : 'document';
       let resultBlob: Blob;
@@ -711,10 +723,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           formData.append('file', primaryFile);
           formData.append('target_format', selectedFormat);
           formData.append('dpi', '150');
-          const res = await fetch('/api/convert/pdf-to-images', { method: 'POST', body: formData });
+          const res = await fetch(`${apiUrl}/api/convert/pdf-to-images`, { method: 'POST', body: formData });
           if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'PDF to images conversion failed' }));
-            throw new Error(err.detail || 'PDF to images conversion failed');
+            const detail = await parseApiError(res, 'PDF to images conversion failed');
+            throw new Error(detail);
           }
           resultBlob = await res.blob();
           const contentType = res.headers.get('content-type') || '';
@@ -729,10 +741,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           if (modalFiles.length === 1) {
             formData.append('file', modalFiles[0]);
           }
-          const res = await fetch('/api/convert/images-to-pdf', { method: 'POST', body: formData });
+          const res = await fetch(`${apiUrl}/api/convert/images-to-pdf`, { method: 'POST', body: formData });
           if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'Image to PDF conversion failed' }));
-            throw new Error(err.detail || 'Image to PDF conversion failed');
+            const detail = await parseApiError(res, 'Image to PDF conversion failed');
+            throw new Error(detail);
           }
           resultBlob = await res.blob();
           filename = `${stem}.pdf`;
@@ -742,10 +754,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         case 'compress-pdf': {
           const formData = new FormData();
           formData.append('file', primaryFile);
-          const res = await fetch('/api/compress/pdf', { method: 'POST', body: formData });
+          const res = await fetch(`${apiUrl}/api/compress/pdf`, { method: 'POST', body: formData });
           if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'PDF compression failed' }));
-            throw new Error(err.detail || 'PDF compression failed');
+            const detail = await parseApiError(res, 'PDF compression failed');
+            throw new Error(detail);
           }
           resultBlob = await res.blob();
           filename = `${stem}_compressed.pdf`;
@@ -757,10 +769,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           const formData = new FormData();
           formData.append('file', primaryFile);
           formData.append('target_format', selectedFormat);
-          const res = await fetch('/api/convert/video', { method: 'POST', body: formData });
+          const res = await fetch(`${apiUrl}/api/convert/video`, { method: 'POST', body: formData });
           if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'Video conversion failed' }));
-            throw new Error(err.detail || 'Video conversion failed');
+            const detail = await parseApiError(res, 'Video conversion failed');
+            throw new Error(detail);
           }
           resultBlob = await res.blob();
           filename = `${stem}.${selectedFormat}`;
@@ -772,10 +784,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           const formData = new FormData();
           formData.append('file', primaryFile);
           formData.append('target_format', selectedFormat);
-          const res = await fetch('/api/convert/audio', { method: 'POST', body: formData });
+          const res = await fetch(`${apiUrl}/api/convert/audio`, { method: 'POST', body: formData });
           if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'Audio conversion failed' }));
-            throw new Error(err.detail || 'Audio conversion failed');
+            const detail = await parseApiError(res, 'Audio conversion failed');
+            throw new Error(detail);
           }
           resultBlob = await res.blob();
           filename = `${stem}.${selectedFormat}`;
@@ -785,10 +797,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         case 'compress-video': {
           const formData = new FormData();
           formData.append('file', primaryFile);
-          const res = await fetch('/api/compress/video', { method: 'POST', body: formData });
+          const res = await fetch(`${apiUrl}/api/compress/video`, { method: 'POST', body: formData });
           if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'Video compression failed' }));
-            throw new Error(err.detail || 'Video compression failed');
+            const detail = await parseApiError(res, 'Video compression failed');
+            throw new Error(detail);
           }
           resultBlob = await res.blob();
           filename = `${stem}_compressed.mp4`;
@@ -798,10 +810,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         case 'compress-audio': {
           const formData = new FormData();
           formData.append('file', primaryFile);
-          const res = await fetch('/api/compress/audio', { method: 'POST', body: formData });
+          const res = await fetch(`${apiUrl}/api/compress/audio`, { method: 'POST', body: formData });
           if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'Audio compression failed' }));
-            throw new Error(err.detail || 'Audio compression failed');
+            const detail = await parseApiError(res, 'Audio compression failed');
+            throw new Error(detail);
           }
           resultBlob = await res.blob();
           filename = `${stem}_compressed.mp3`;
@@ -811,10 +823,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         case 'compress-image': {
           const formData = new FormData();
           formData.append('file', primaryFile);
-          const res = await fetch('/api/compress/image', { method: 'POST', body: formData });
+          const res = await fetch(`${apiUrl}/api/compress/image`, { method: 'POST', body: formData });
           if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'Image compression failed' }));
-            throw new Error(err.detail || 'Image compression failed');
+            const detail = await parseApiError(res, 'Image compression failed');
+            throw new Error(detail);
           }
           resultBlob = await res.blob();
           filename = `${stem}_compressed.webp`;

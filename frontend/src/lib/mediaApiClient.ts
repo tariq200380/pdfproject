@@ -23,8 +23,9 @@ export function triggerDownload(blob: Blob, filename: string): void {
 }
 
 class MediaApiClient {
-  private convertBase = '/api/convert';
-  private compressBase = '/api/compress';
+  private apiHost = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  private convertBase = `${this.apiHost}/api/convert`;
+  private compressBase = `${this.apiHost}/api/compress`;
 
   private extractFilename(res: Response, fallback: string): string {
     const disposition = res.headers.get('content-disposition');
@@ -55,8 +56,15 @@ class MediaApiClient {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: 'Audio conversion failed' }));
-      throw new Error(err.detail || 'Audio conversion failed');
+      let msg = 'Audio conversion failed';
+      try {
+        const err = await res.json();
+        msg = err.detail || err.message || msg;
+      } catch {
+        const text = await res.text().catch(() => '');
+        if (text) msg = `${msg}: ${text.slice(0, 150)}`;
+      }
+      throw new Error(msg);
     }
 
     const blob = await res.blob();
@@ -80,8 +88,15 @@ class MediaApiClient {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: 'Video conversion failed' }));
-      throw new Error(err.detail || 'Video conversion failed');
+      let msg = 'Video conversion failed';
+      try {
+        const err = await res.json();
+        msg = err.detail || err.message || msg;
+      } catch {
+        const text = await res.text().catch(() => '');
+        if (text) msg = `${msg}: ${text.slice(0, 150)}`;
+      }
+      throw new Error(msg);
     }
 
     const blob = await res.blob();

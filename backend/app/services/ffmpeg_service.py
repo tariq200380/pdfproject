@@ -72,7 +72,7 @@ class FFmpegService:
         out_file = output_path or input_path.with_suffix(f".{fmt}")
         out_file.parent.mkdir(parents=True, exist_ok=True)
 
-        args = ["-y", "-i", str(input_path)]
+        args = ["-y", "-i", str(input_path), "-vn"]
 
         # Codec selection based on format
         if fmt == "mp3":
@@ -124,7 +124,7 @@ class FFmpegService:
         elif fmt == "mkv":
             args += ["-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p"]
         elif fmt == "webm":
-            args += ["-c:v", "libvpx-vp9", "-c:a", "libopus", "-pix_fmt", "yuv420p"]
+            args += ["-c:v", "libvpx-vp9", "-row-mt", "1", "-cpu-used", "4", "-threads", "0", "-c:a", "libopus", "-pix_fmt", "yuv420p"]
         elif fmt == "mov":
             args += ["-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p"]
         elif fmt == "avi":
