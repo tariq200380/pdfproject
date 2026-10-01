@@ -159,5 +159,121 @@ class PDFOpsService:
         finally:
             doc.close()
 
+    @classmethod
+    def protect_pdf(
+        cls,
+        file_input: Union[str, Path, bytes],
+        password: str,
+        output_path: Union[str, Path],
+    ) -> Path:
+        """Encrypts PDF with AES-256 password protection."""
+        out_path = Path(output_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        doc = pdf_engine.open_document(file_input)
+        try:
+            doc.save(
+                str(out_path),
+                encryption=pymupdf.PDF_ENCRYPT_AES_256,
+                user_pw=password,
+                owner_pw=password,
+            )
+            return out_path
+        finally:
+            doc.close()
+
+    @classmethod
+    def delete_pages(
+        cls,
+        file_input: Union[str, Path, bytes],
+        page_indices: List[int],
+        output_path: Union[str, Path],
+    ) -> Path:
+        """Deletes specified 0-indexed pages from the PDF."""
+        out_path = Path(output_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        doc = pdf_engine.open_document(file_input)
+        try:
+            for p in sorted(page_indices, reverse=True):
+                if 0 <= p < len(doc) and len(doc) > 1:
+                    doc.delete_page(p)
+            doc.save(str(out_path))
+            return out_path
+        finally:
+            doc.close()
+
+    @classmethod
+    def crop_pdf(
+        cls,
+        file_input: Union[str, Path, bytes],
+        margin_percent: float,
+        output_path: Union[str, Path],
+    ) -> Path:
+        """Adjusts page visible boundary by applying a trim margin percentage."""
+        out_path = Path(output_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        doc = pdf_engine.open_document(file_input)
+        try:
+            factor = max(0.01, min(0.35, margin_percent / 100.0))
+            for page in doc:
+                r = page.rect
+                new_rect = pymupdf.Rect(
+                    r.x0 + r.width * factor,
+                    r.y0 + r.height * factor,
+                    r.x1 - r.width * factor,
+                    r.y1 - r.height * factor,
+                )
+                page.set_cropbox(new_rect)
+            doc.save(str(out_path))
+            return out_path
+        finally:
+            doc.close()
+
+    @classmethod
+    def number_pages(
+        cls,
+        file_input: Union[str, Path, bytes],
+        format_str: str,
+        output_path: Union[str, Path],
+    ) -> Path:
+        """Numbers PDF document pages with customized footer text."""
+        out_path = Path(output_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        doc = pdf_engine.open_document(file_input)
+        try:
+            total = len(doc)
+            for i, page in enumerate(doc):
+                text = format_str.replace("{n}", str(i + 1)).replace("{total}", str(total))
+                rect = page.rect
+                page.insert_text(
+                    pymupdf.Point(rect.width / 2 - 35, rect.height - 25),
+                    text,
+                    fontsize=10,
+                    color=(0.3, 0.3, 0.3),
+                )
+            doc.save(str(out_path))
+            return out_path
+        finally:
+            doc.close()
+
+    @classmethod
+    def reorder_pages(
+        cls,
+        file_input: Union[str, Path, bytes],
+        order: List[int],
+        output_path: Union[str, Path],
+    ) -> Path:
+        """Reorders document pages according to specified sequence."""
+        out_path = Path(output_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        doc = pdf_engine.open_document(file_input)
+        try:
+            valid_order = [p for p in order if 0 <= p < len(doc)]
+            if valid_order:
+                doc.select(valid_order)
+            doc.save(str(out_path))
+            return out_path
+        finally:
+            doc.close()
+
 
 pdf_ops = PDFOpsService()

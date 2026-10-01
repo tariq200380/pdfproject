@@ -356,3 +356,173 @@ async def rotate_pdf_endpoint(
         filename="rotated_document.pdf",
         media_type="application/pdf",
     )
+
+
+@router.post("/protect")
+async def protect_pdf_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    password: str = Form(...),
+):
+    """Encrypts a PDF with AES-256 password protection."""
+    content = await file.read()
+    if not pdf_engine.validate_pdf_bytes(content):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid PDF")
+    if not password:
+        raise HTTPException(status_code=400, detail="Password cannot be empty")
+
+    session_id, session_dir = sandbox_manager.create_session()
+    src_path = session_dir / "input.pdf"
+    src_path.write_bytes(content)
+    out_path = session_dir / "protected.pdf"
+
+    try:
+        pdf_ops.protect_pdf(src_path, password, out_path)
+    except Exception as e:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=500, detail=f"PDF protection failed: {e}")
+
+    background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    stem = Path(file.filename or "document").stem
+    return FileResponse(
+        path=out_path,
+        filename=f"{stem}_protected.pdf",
+        media_type="application/pdf",
+    )
+
+
+@router.post("/delete-pages")
+async def delete_pages_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    pages: str = Form(...),  # e.g. "1, 3, 5" (1-based)
+):
+    """Deletes specified 1-based page numbers from a PDF document."""
+    content = await file.read()
+    if not pdf_engine.validate_pdf_bytes(content):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid PDF")
+
+    try:
+        page_indices = [int(p.strip()) - 1 for p in pages.split(",") if p.strip()]
+    except Exception:
+        raise HTTPException(status_code=400, detail="Pages must be comma-separated integers (e.g. 1, 3)")
+
+    session_id, session_dir = sandbox_manager.create_session()
+    src_path = session_dir / "input.pdf"
+    src_path.write_bytes(content)
+    out_path = session_dir / "pages_deleted.pdf"
+
+    try:
+        pdf_ops.delete_pages(src_path, page_indices, out_path)
+    except Exception as e:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=500, detail=f"Page deletion failed: {e}")
+
+    background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    stem = Path(file.filename or "document").stem
+    return FileResponse(
+        path=out_path,
+        filename=f"{stem}_deleted.pdf",
+        media_type="application/pdf",
+    )
+
+
+@router.post("/crop")
+async def crop_pdf_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    margin_percent: float = Form(5.0),
+):
+    """Crops PDF margins by given percentage."""
+    content = await file.read()
+    if not pdf_engine.validate_pdf_bytes(content):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid PDF")
+
+    session_id, session_dir = sandbox_manager.create_session()
+    src_path = session_dir / "input.pdf"
+    src_path.write_bytes(content)
+    out_path = session_dir / "cropped.pdf"
+
+    try:
+        pdf_ops.crop_pdf(src_path, margin_percent, out_path)
+    except Exception as e:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=500, detail=f"Cropping failed: {e}")
+
+    background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    stem = Path(file.filename or "document").stem
+    return FileResponse(
+        path=out_path,
+        filename=f"{stem}_cropped.pdf",
+        media_type="application/pdf",
+    )
+
+
+@router.post("/number-pages")
+async def number_pages_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    format_str: str = Form("Page {n} of {total}"),
+):
+    """Adds page numbers to PDF."""
+    content = await file.read()
+    if not pdf_engine.validate_pdf_bytes(content):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid PDF")
+
+    session_id, session_dir = sandbox_manager.create_session()
+    src_path = session_dir / "input.pdf"
+    src_path.write_bytes(content)
+    out_path = session_dir / "numbered.pdf"
+
+    try:
+        pdf_ops.number_pages(src_path, format_str, out_path)
+    except Exception as e:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=500, detail=f"Numbering failed: {e}")
+
+    background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    stem = Path(file.filename or "document").stem
+    return FileResponse(
+        path=out_path,
+        filename=f"{stem}_numbered.pdf",
+        media_type="application/pdf",
+    )
+
+
+@router.post("/reorder")
+async def reorder_pages_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    order_json: str = Form(...),  # e.g. "[2, 0, 1]"
+):
+    """Reorders PDF pages according to list of 0-based page indices."""
+    content = await file.read()
+    if not pdf_engine.validate_pdf_bytes(content):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid PDF")
+
+    try:
+        order = json.loads(order_json)
+        if not isinstance(order, list):
+            raise ValueError()
+        order = [int(p) for p in order]
+    except Exception:
+        raise HTTPException(status_code=400, detail="order_json must be a JSON array of 0-based page indices")
+
+    session_id, session_dir = sandbox_manager.create_session()
+    src_path = session_dir / "input.pdf"
+    src_path.write_bytes(content)
+    out_path = session_dir / "reordered.pdf"
+
+    try:
+        pdf_ops.reorder_pages(src_path, order, out_path)
+    except Exception as e:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=500, detail=f"Reordering failed: {e}")
+
+    background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    stem = Path(file.filename or "document").stem
+    return FileResponse(
+        path=out_path,
+        filename=f"{stem}_reordered.pdf",
+        media_type="application/pdf",
+    )

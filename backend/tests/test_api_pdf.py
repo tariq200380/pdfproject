@@ -117,3 +117,57 @@ async def test_rotate_endpoint(multi_page_pdf_bytes):
         assert meta.pages[0].rotation == 90
         assert meta.pages[1].rotation == 180
         assert meta.pages[2].rotation == 0
+
+
+@pytest.mark.asyncio
+async def test_protect_endpoint(multi_page_pdf_bytes):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        files = {"file": ("doc.pdf", multi_page_pdf_bytes, "application/pdf")}
+        data = {"password": "secret_password"}
+        res = await ac.post("/api/pdf/protect", files=files, data=data)
+        assert res.status_code == 200
+        assert res.headers["content-type"] == "application/pdf"
+        assert len(res.content) > 0
+
+
+@pytest.mark.asyncio
+async def test_delete_pages_endpoint(multi_page_pdf_bytes):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        files = {"file": ("doc.pdf", multi_page_pdf_bytes, "application/pdf")}
+        data = {"pages": "2"}
+        res = await ac.post("/api/pdf/delete-pages", files=files, data=data)
+        assert res.status_code == 200
+        meta = pdf_engine.extract_metadata(res.content)
+        assert meta.page_count == 2
+
+
+@pytest.mark.asyncio
+async def test_crop_endpoint(multi_page_pdf_bytes):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        files = {"file": ("doc.pdf", multi_page_pdf_bytes, "application/pdf")}
+        data = {"margin_percent": "10.0"}
+        res = await ac.post("/api/pdf/crop", files=files, data=data)
+        assert res.status_code == 200
+        assert len(res.content) > 0
+
+
+@pytest.mark.asyncio
+async def test_number_pages_endpoint(multi_page_pdf_bytes):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        files = {"file": ("doc.pdf", multi_page_pdf_bytes, "application/pdf")}
+        data = {"format_str": "Page {n} of {total}"}
+        res = await ac.post("/api/pdf/number-pages", files=files, data=data)
+        assert res.status_code == 200
+        assert len(res.content) > 0
+
+
+@pytest.mark.asyncio
+async def test_reorder_endpoint(multi_page_pdf_bytes):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        files = {"file": ("doc.pdf", multi_page_pdf_bytes, "application/pdf")}
+        data = {"order_json": json.dumps([2, 1, 0])}
+        res = await ac.post("/api/pdf/reorder", files=files, data=data)
+        assert res.status_code == 200
+        meta = pdf_engine.extract_metadata(res.content)
+        assert meta.page_count == 3
+

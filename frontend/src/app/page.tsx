@@ -147,15 +147,27 @@ export default function StudioHomePage() {
       return;
     }
 
-    if (toolId === 'merge-pdf' || toolId === 'split-pdf' || toolId === 'rotate-pdf') {
-      const pdfFile = stagedFiles.find((f) => f.category === 'pdf');
-      if (pdfFile) {
-        setActiveEditingPdf(pdfFile.file);
-      } else {
-        setActiveTab('pdf');
-        setActiveNotice(`Please upload a PDF document above to ${toolId.replace('-', ' ')}.`);
-        setTimeout(() => setActiveNotice(null), 5000);
-      }
+    if (
+      toolId === 'merge-pdf' ||
+      toolId === 'split-pdf' ||
+      toolId === 'rotate-pdf' ||
+      toolId === 'crop-pdf' ||
+      toolId === 'delete-pages' ||
+      toolId === 'reorder-pages' ||
+      toolId === 'extract-pages' ||
+      toolId === 'insert-pages' ||
+      toolId === 'number-pages' ||
+      toolId === 'fill-sign' ||
+      toolId === 'request-signatures' ||
+      toolId === 'protect-pdf'
+    ) {
+      setActiveTab('pdf');
+      setTimeout(() => {
+        const elem = document.getElementById('adobe-tools-grid');
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 50);
       return;
     }
 
@@ -347,7 +359,11 @@ export default function StudioHomePage() {
             <AllConvertersGrid />
 
             {/* Adobe-Style Categorized Tools Grid */}
-            <ToolsGrid onSelectTool={handleSelectTool} />
+            <ToolsGrid
+              onSelectTool={handleSelectTool}
+              onOpenEditor={(file) => setActiveEditingPdf(file)}
+              stagedPdfFile={stagedFiles.find((f) => f.category === 'pdf')?.file || null}
+            />
           </>
         )}
       </main>

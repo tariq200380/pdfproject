@@ -139,6 +139,140 @@ class PdfApiClient {
     return res.blob();
   }
 
+  async mergePdfs(files: File[]): Promise<Blob> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+
+    const res = await fetch(`${this.baseUrl}/merge`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to merge PDFs' }));
+      throw new Error(err.detail || 'Merge failed');
+    }
+
+    return res.blob();
+  }
+
+  async burstPdf(file: File): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${this.baseUrl}/burst`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to burst PDF pages');
+    }
+
+    return res.blob();
+  }
+
+  async protectPdf(file: File, password: string): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('password', password);
+
+    const res = await fetch(`${this.baseUrl}/protect`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to protect PDF' }));
+      throw new Error(err.detail || 'Protection failed');
+    }
+
+    return res.blob();
+  }
+
+  async deletePages(file: File, pages: string): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('pages', pages);
+
+    const res = await fetch(`${this.baseUrl}/delete-pages`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to delete pages' }));
+      throw new Error(err.detail || 'Page deletion failed');
+    }
+
+    return res.blob();
+  }
+
+  async cropPdf(file: File, marginPercent: number = 5.0): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('margin_percent', marginPercent.toString());
+
+    const res = await fetch(`${this.baseUrl}/crop`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to crop PDF' }));
+      throw new Error(err.detail || 'Crop failed');
+    }
+
+    return res.blob();
+  }
+
+  async numberPages(file: File, formatStr: string = 'Page {n} of {total}'): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('format_str', formatStr);
+
+    const res = await fetch(`${this.baseUrl}/number-pages`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to number pages' }));
+      throw new Error(err.detail || 'Numbering failed');
+    }
+
+    return res.blob();
+  }
+
+  async reorderPages(file: File, order: number[]): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('order_json', JSON.stringify(order));
+
+    const res = await fetch(`${this.baseUrl}/reorder`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to reorder pages' }));
+      throw new Error(err.detail || 'Reorder failed');
+    }
+
+    return res.blob();
+  }
+
+  triggerBrowserDownload(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
   getThumbnailUrl(sessionId: string, pageIndex: number, timestamp?: number): string {
     const ts = timestamp ? `?t=${timestamp}&dpi=150` : `?dpi=150`;
     return `${this.baseUrl}/thumbnail/${sessionId}/${pageIndex}${ts}`;
@@ -150,3 +284,4 @@ class PdfApiClient {
 }
 
 export const pdfApiClient = new PdfApiClient();
+
