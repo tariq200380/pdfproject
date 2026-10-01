@@ -1,4 +1,4 @@
-/** TypeScript type definitions for OmniMedia & PDF Studio. */
+/** TypeScript type definitions for Creed-Tech PDF & Media Studio. */
 
 export type FileTypeCategory = 'pdf' | 'video' | 'audio' | 'image' | 'other';
 

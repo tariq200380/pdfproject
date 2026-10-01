@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ActiveStudioTab, StagedFile } from '@/lib/types';
 import { detectCategory, indexedDBService } from '@/lib/indexedDbService';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { ToolActionId } from '@/components/adobe/MegaMenu';
 import { ToolsGrid } from '@/components/adobe/ToolsGrid';
 import { AutoRecoveryBanner } from '@/components/AutoRecoveryBanner';
@@ -12,7 +13,7 @@ import { StagedFileCard } from '@/components/StagedFileCard';
 import { PdfEditorWorkspace } from '@/components/pdf/PdfEditorWorkspace';
 import { MediaConverterWorkspace } from '@/components/converter/MediaConverterWorkspace';
 import { SmartCompressorWorkspace } from '@/components/compressor/SmartCompressorWorkspace';
-import { Trash2, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Trash2, Sparkles, FolderUp, LayoutGrid } from 'lucide-react';
 
 export default function StudioHomePage() {
   const [activeTab, setActiveTab] = useState<ActiveStudioTab>('pdf');
@@ -228,7 +229,7 @@ export default function StudioHomePage() {
         {/* Transient Notice Toast */}
         {activeNotice && (
           <div style={{
-            maxWidth: '1100px',
+            maxWidth: '1140px',
             margin: '20px auto 0 auto',
             padding: '12px 20px',
             backgroundColor: '#f0fdf4',
@@ -266,35 +267,35 @@ export default function StudioHomePage() {
 
         {activeTab === 'pdf' && (
           <>
-            {/* Adobe Acrobat Portal Hero Header */}
-            <section style={{ maxWidth: '1100px', margin: '40px auto 16px auto', textAlign: 'center' }}>
+            {/* Adobe Acrobat Online Hero Banner (Creed-Tech Branded) */}
+            <section style={{ maxWidth: '1140px', margin: '48px auto 20px auto', textAlign: 'center' }}>
               <h2 style={{
-                fontSize: '34px',
+                fontSize: '38px',
                 fontWeight: 800,
                 color: '#0f172a',
-                letterSpacing: '-0.03em',
-                lineHeight: 1.25,
-                marginBottom: '10px',
+                letterSpacing: '-0.035em',
+                lineHeight: 1.2,
+                marginBottom: '14px',
               }}>
-                Do your best work with all-in-one PDF & Media Studio
+                Do your best work online with Creed-Tech Studio
               </h2>
               <p style={{
-                fontSize: '16px',
+                fontSize: '17px',
                 color: '#475569',
-                maxWidth: '680px',
+                maxWidth: '720px',
                 margin: '0 auto',
-                lineHeight: 1.5,
+                lineHeight: 1.6,
               }}>
-                Create, convert, edit, and compress PDFs, audio, video, and photos. 100% stateless, zero registration required.
+                Instant in-place PDF editing, universal media conversion, and lossless compression without registration. 100% stateless and private.
               </p>
             </section>
 
-            {/* Drag & Drop Staging Area */}
+            {/* Drag & Drop Staging Launcher */}
             <DragDropZone onFilesSelected={handleFilesSelected} />
 
-            {/* Staged Files Section */}
+            {/* Staged Files Workspace Section */}
             {stagedFiles.length > 0 && (
-              <section style={{ maxWidth: '1100px', margin: '32px auto 0 auto' }}>
+              <section style={{ maxWidth: '1140px', margin: '36px auto 0 auto' }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -346,6 +347,9 @@ export default function StudioHomePage() {
           </>
         )}
       </main>
+
+      {/* Adobe-Style Global Footer */}
+      <Footer />
     </div>
   );
 }

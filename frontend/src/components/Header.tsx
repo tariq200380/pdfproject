@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
         padding: '0 32px',
-        height: '64px',
+        height: '66px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -72,9 +72,9 @@ export const Header: React.FC<HeaderProps> = ({
         boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.04)',
       }}
     >
-      {/* Left side: Studio Logo, Name, Divider, and Acrobat Navigation Items */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        {/* Adobe-inspired Brand Emblem */}
+      {/* Left side: Creed-Tech Logo, Vertical Divider, Studio Subtitle, and Adobe-style Nav items */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
+        {/* Creed-Tech Brand Emblem & Name */}
         <div
           onClick={() => {
             setOpenMenu(null);
@@ -93,41 +93,59 @@ export const Header: React.FC<HeaderProps> = ({
             height: '36px',
             backgroundColor: '#e11d48',
             color: '#ffffff',
-            borderRadius: '8px',
+            borderRadius: '9px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontWeight: 800,
+            fontWeight: 900,
             fontSize: '18px',
-            boxShadow: '0 2px 5px rgba(225, 29, 72, 0.3)',
+            boxShadow: '0 2px 5px rgba(225, 29, 72, 0.28)',
+            letterSpacing: '-0.02em',
           }}>
-            Ω
+            C
           </div>
-          <span style={{
-            fontSize: '18px',
-            fontWeight: 700,
-            color: '#0f172a',
-            letterSpacing: '-0.025em',
-          }}>
-            OmniMedia Studio
-          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{
+              fontSize: '19px',
+              fontWeight: 800,
+              color: '#0f172a',
+              letterSpacing: '-0.03em',
+            }}>
+              Creed-Tech
+            </span>
+
+            {/* Subtle Vertical Divider */}
+            <span style={{ color: '#cbd5e1', fontWeight: 300, fontSize: '18px', margin: '0 2px' }}>
+              |
+            </span>
+
+            <span style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#64748b',
+              letterSpacing: '-0.01em',
+            }}>
+              PDF & Media Studio
+            </span>
+          </div>
         </div>
 
-        {/* Clean Vertical Divider */}
-        <div style={{ width: '1px', height: '24px', backgroundColor: '#e2e8f0' }} />
+        {/* Vertical Divider */}
+        <div style={{ width: '1px', height: '22px', backgroundColor: '#e2e8f0' }} />
 
-        {/* Acrobat Online Navigation Items */}
+        {/* Adobe-Style Navigation Menu Bar */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {/* Tools button */}
+          {/* Tools */}
           <button
             onClick={() => handleToolDispatch('all-tools')}
             className={`adobe-nav-item ${activeTab === 'pdf' && !openMenu ? 'active' : ''}`}
           >
-            <LayoutGrid size={16} />
+            <LayoutGrid size={15} />
             Tools
           </button>
 
-          {/* Convert with Mega Menu */}
+          {/* Convert (Mega-Menu) */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setOpenMenu(openMenu === 'convert' ? null : 'convert')}
@@ -151,7 +169,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Edit with Mega Menu */}
+          {/* Edit (Dropdown) */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setOpenMenu(openMenu === 'edit' ? null : 'edit')}
@@ -175,7 +193,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Compress with Mega Menu */}
+          {/* Compress (Dropdown) */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setOpenMenu(openMenu === 'compress' ? null : 'compress')}
@@ -199,7 +217,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Media Studio link */}
+          {/* Media Engine */}
           <button
             onClick={() => {
               setOpenMenu(null);
@@ -208,27 +226,28 @@ export const Header: React.FC<HeaderProps> = ({
             className={`adobe-nav-item ${activeTab === 'converter' && !openMenu ? 'active' : ''}`}
           >
             <RefreshCw size={15} />
-            Media Studio
+            Media Engine
           </button>
         </nav>
       </div>
 
-      {/* Right side: NO sign in/registration. Strictly Frictionless & Stateless */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Right Side: NO login/registration. Stateless Badge & IndexedDB Auto-Recovery */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         <span style={{
-          fontSize: '11px',
+          fontSize: '12px',
           fontWeight: 600,
-          padding: '4px 10px',
+          padding: '5px 12px',
           backgroundColor: '#ecfdf5',
           color: '#047857',
-          borderRadius: '6px',
+          borderRadius: '7px',
           border: '1px solid #a7f3d0',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '5px',
+          gap: '6px',
+          userSelect: 'none',
         }}>
-          <ShieldCheck size={13} color="#059669" />
-          Stateless • Zero Storage
+          <ShieldCheck size={14} color="#059669" />
+          Stateless • No Login Required
         </span>
 
         {/* Local Auto-Recovery Status Pill */}
