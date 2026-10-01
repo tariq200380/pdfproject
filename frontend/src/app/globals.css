@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 /* Minimal Daylight Design System - Creed-Tech PDF & Media Studio */
 /* Adobe Acrobat Online Portal Architecture & Clean UI Standards */
 
@@ -77,9 +79,21 @@ body {
   overflow-x: hidden;
   background-color: var(--bg-canvas);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.font-heading {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.font-body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 a {
@@ -542,3 +556,119 @@ a {
 .hover\:text-white:hover {
   color: #ffffff;
 }
+
+/* Creed Tech Minimalist & Premium Footer */
+.creed-footer {
+  background-color: #fafbfd;
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 32px 32px;
+  color: #475569;
+  font-size: 13px;
+  margin-top: auto;
+}
+
+.creed-footer-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.creed-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 260px;
+  justify-content: flex-start;
+}
+
+.creed-footer-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.creed-footer-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.creed-footer-link {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.creed-footer-link:hover {
+  color: #0f172a;
+}
+
+.creed-footer-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.creed-footer-social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: #64748b;
+  background-color: transparent;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: color 0.18s ease, background-color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+.creed-footer-social-btn:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
+  border-color: rgba(226, 232, 240, 0.8);
+  transform: translateY(-1px);
+}
+
+.creed-footer-social-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 840px) {
+  .creed-footer-inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .creed-footer-left {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .creed-footer-center {
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .creed-footer-right {
+    justify-content: center;
+  }
+}
+

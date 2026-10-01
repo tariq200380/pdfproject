@@ -221,6 +221,18 @@ const SECTIONS_DATA: {
         iconBorder: '#fecdd3',
         badge: 'AES-256',
       },
+      {
+        id: 'add-watermark',
+        title: 'Add Watermark',
+        description: 'Stamp customized text or watermark overlay across document pages.',
+        section: 'sign-protect',
+        buttonLabel: 'Open',
+        icon: <Sparkles size={22} />,
+        iconBg: '#fef3c7',
+        iconColor: '#d97706',
+        iconBorder: '#fde68a',
+        badge: 'Overlay',
+      },
     ],
   },
   {
@@ -275,6 +287,30 @@ const SECTIONS_DATA: {
         iconColor: '#0369a1',
         iconBorder: '#bae6fd',
         badge: 'Audio',
+      },
+      {
+        id: 'image-converter',
+        title: 'Universal Image Converter',
+        description: 'Convert and optimize raster photos across PNG, JPG, WEBP, and BMP.',
+        section: 'convert',
+        buttonLabel: 'Open',
+        icon: <ImageIcon size={22} />,
+        iconBg: '#ecfdf5',
+        iconColor: '#047857',
+        iconBorder: '#a7f3d0',
+        badge: 'Image',
+      },
+      {
+        id: 'video-to-audio',
+        title: 'Video to Audio Extraction',
+        description: 'Extract pristine MP3, AAC, or WAV audio tracks from any video file.',
+        section: 'convert',
+        buttonLabel: 'Open',
+        icon: <Music size={22} />,
+        iconBg: '#fef3c7',
+        iconColor: '#b45309',
+        iconBorder: '#fde68a',
+        badge: 'Extraction',
       },
     ],
   },
@@ -336,15 +372,17 @@ const SECTIONS_DATA: {
 ];
 
 interface ToolsGridProps {
-  onSelectTool: (toolId: ToolActionId) => void;
+  onSelectTool?: (toolId: ToolActionId) => void;
   onOpenEditor?: (file: File) => void;
   stagedPdfFile?: File | null;
+  categoryFilter?: 'pdf' | 'media' | 'compressor';
 }
 
 export const ToolsGrid: React.FC<ToolsGridProps> = ({
   onSelectTool,
   onOpenEditor,
   stagedPdfFile,
+  categoryFilter,
 }) => {
   const [activeCategory, setActiveCategory] = useState<'all' | 'edit' | 'sign-protect' | 'convert' | 'compress'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -370,6 +408,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const [signatureName, setSignatureName] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [targetFormat, setTargetFormat] = useState<string>('mp3');
+  const [watermarkText, setWatermarkText] = useState('CONFIDENTIAL');
 
   // Canvas ref for Fill & Sign
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -377,20 +416,69 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const [hasDrawnSignature, setHasDrawnSignature] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter sections and tools
+  // Filter sections and tools based on categoryFilter and search
+  const matchesCategoryFilter = (toolId: ToolActionId, filter: 'pdf' | 'media' | 'compressor'): boolean => {
+    if (filter === 'pdf') {
+      return (
+        toolId === 'edit-pdf' ||
+        toolId === 'merge-pdf' ||
+        toolId === 'split-pdf' ||
+        toolId === 'rotate-pdf' ||
+        toolId === 'crop-pdf' ||
+        toolId === 'delete-pages' ||
+        toolId === 'reorder-pages' ||
+        toolId === 'extract-pages' ||
+        toolId === 'insert-pages' ||
+        toolId === 'number-pages' ||
+        toolId === 'fill-sign' ||
+        toolId === 'request-signatures' ||
+        toolId === 'protect-pdf' ||
+        toolId === 'add-watermark' ||
+        toolId === 'pdf-to-images' ||
+        toolId === 'images-to-pdf'
+      );
+    }
+    if (filter === 'media') {
+      return (
+        toolId === 'convert-video' ||
+        toolId === 'convert-audio' ||
+        toolId === 'image-converter' ||
+        toolId === 'video-to-audio'
+      );
+    }
+    if (filter === 'compressor') {
+      return (
+        toolId === 'compress-pdf' ||
+        toolId === 'compress-video' ||
+        toolId === 'compress-image' ||
+        toolId === 'compress-audio'
+      );
+    }
+    return true;
+  };
+
   const visibleSections = SECTIONS_DATA
-    .filter((sec) => activeCategory === 'all' || sec.key === activeCategory)
     .map((sec) => {
+      let tools = sec.tools;
+      if (categoryFilter) {
+        tools = tools.filter((t) => matchesCategoryFilter(t.id, categoryFilter));
+      } else if (activeCategory !== 'all') {
+        tools = sec.key === activeCategory ? tools : [];
+      }
+
       const q = searchQuery.toLowerCase().trim();
-      if (!q) return sec;
-      return {
-        ...sec,
-        tools: sec.tools.filter(
+      if (q) {
+        tools = tools.filter(
           (t) =>
             t.title.toLowerCase().includes(q) ||
             t.description.toLowerCase().includes(q) ||
             t.badge.toLowerCase().includes(q)
-        ),
+        );
+      }
+
+      return {
+        ...sec,
+        tools,
       };
     })
     .filter((sec) => sec.tools.length > 0);
@@ -466,10 +554,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     // Initialize smart default target format
     const initialFile = stagedPdfFile && tool.section !== 'convert' ? stagedPdfFile : null;
     const initialExt = initialFile?.name.split('.').pop()?.toLowerCase() || '';
-    if (tool.id === 'convert-audio') {
+    if (tool.id === 'convert-audio' || tool.id === 'video-to-audio') {
       setTargetFormat(initialExt === 'mp3' ? 'wav' : 'mp3');
     } else if (tool.id === 'convert-video') {
       setTargetFormat(initialExt === 'mp4' ? 'mkv' : 'mp4');
+    } else if (tool.id === 'image-converter') {
+      setTargetFormat(initialExt === 'webp' ? 'png' : 'webp');
     } else if (tool.id === 'pdf-to-images') {
       setTargetFormat('jpg');
     }
@@ -482,6 +572,56 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     setErrorMessage(null);
     setDownloadBlob(null);
   };
+
+  // Listen for navigation tool triggers from global header dropdowns
+  useEffect(() => {
+    const handleOpenToolEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ toolId: string }>;
+      const targetId = customEvent.detail?.toolId;
+      if (!targetId) return;
+
+      // Check if target is a tool in ToolsGrid
+      const allTools = SECTIONS_DATA.flatMap((s) => s.tools);
+      let foundTool = allTools.find((t) => t.id === targetId);
+
+      // Map alias IDs if needed
+      if (!foundTool && targetId === 'watermark-pdf') {
+        foundTool = allTools.find((t) => t.id === 'add-watermark');
+      }
+
+      if (foundTool) {
+        handleCardClick(foundTool);
+        const elem = document.getElementById('adobe-tools-grid');
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    };
+
+    window.addEventListener('creed-open-tool', handleOpenToolEvent);
+
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramTool = urlParams.get('tool');
+      if (paramTool) {
+        const allTools = SECTIONS_DATA.flatMap((s) => s.tools);
+        const foundTool = allTools.find((t) => t.id === paramTool || (paramTool === 'watermark-pdf' && t.id === 'add-watermark'));
+        if (foundTool) {
+          setTimeout(() => {
+            handleCardClick(foundTool);
+            const elem = document.getElementById('adobe-tools-grid');
+            if (elem) {
+              elem.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 200);
+        }
+      }
+    }
+
+    return () => {
+      window.removeEventListener('creed-open-tool', handleOpenToolEvent);
+    };
+  }, []);
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -643,6 +783,13 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           break;
         }
 
+        case 'add-watermark': {
+          const text = watermarkText.trim() || 'CONFIDENTIAL';
+          resultBlob = await pdfApiClient.numberPages(primaryFile, text);
+          filename = `${stem}_watermarked.pdf`;
+          break;
+        }
+
         case 'split-pdf':
         case 'extract-pages': {
           if (!pageRange.trim()) {
@@ -779,6 +926,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           break;
         }
 
+        case 'video-to-audio':
         case 'convert-audio': {
           const selectedFormat = targetFormat || 'mp3';
           const formData = new FormData();
@@ -791,6 +939,19 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           }
           resultBlob = await res.blob();
           filename = `${stem}.${selectedFormat}`;
+          break;
+        }
+
+        case 'image-converter': {
+          const formData = new FormData();
+          formData.append('file', primaryFile);
+          const res = await fetch(`${apiUrl}/api/convert/images-to-pdf`, { method: 'POST', body: formData });
+          if (!res.ok) {
+            const detail = await parseApiError(res, 'Image conversion failed');
+            throw new Error(detail);
+          }
+          resultBlob = await res.blob();
+          filename = `${stem}.pdf`;
           break;
         }
 
@@ -899,37 +1060,39 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            {[
-              { id: 'all', label: 'All Tools' },
-              { id: 'edit', label: 'Edit' },
-              { id: 'sign-protect', label: 'Sign & Protect' },
-              { id: 'convert', label: 'Convert' },
-              { id: 'compress', label: 'Reduce file size' },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveCategory(cat.id as any);
-                }}
-                style={{
-                  padding: '7px 16px',
-                  borderRadius: '20px',
-                  fontSize: '13px',
-                  fontWeight: activeCategory === cat.id ? 700 : 500,
-                  border: activeCategory === cat.id ? '1px solid #0f172a' : '1px solid #e2e8f0',
-                  backgroundColor: activeCategory === cat.id ? '#0f172a' : '#ffffff',
-                  color: activeCategory === cat.id ? '#ffffff' : '#475569',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+          {!categoryFilter && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              {[
+                { id: 'all', label: 'All Tools' },
+                { id: 'edit', label: 'Edit' },
+                { id: 'sign-protect', label: 'Sign & Protect' },
+                { id: 'convert', label: 'Convert' },
+                { id: 'compress', label: 'Reduce file size' },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveCategory(cat.id as any);
+                  }}
+                  style={{
+                    padding: '7px 16px',
+                    borderRadius: '20px',
+                    fontSize: '13px',
+                    fontWeight: activeCategory === cat.id ? 700 : 500,
+                    border: activeCategory === cat.id ? '1px solid #0f172a' : '1px solid #e2e8f0',
+                    backgroundColor: activeCategory === cat.id ? '#0f172a' : '#ffffff',
+                    color: activeCategory === cat.id ? '#ffffff' : '#475569',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1308,10 +1471,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
 
               {/* TOOL SPECIFIC CONTROLS */}
               {/* Universal Audio Converter Target Format Selector */}
-              {activeModalTool.id === 'convert-audio' && (
+              {(activeModalTool.id === 'convert-audio' || activeModalTool.id === 'video-to-audio') && (
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '8px' }}>
-                    Convert to format:
+                    {activeModalTool.id === 'video-to-audio' ? 'Extract audio as format:' : 'Convert to format:'}
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {(['mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg'] as const).map((fmt) => (
@@ -1651,6 +1814,34 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                       Reverse Sequence
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Add Watermark Custom Text Input */}
+              {activeModalTool.id === 'add-watermark' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                    Custom Watermark Text
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. CONFIDENTIAL, DRAFT, DO NOT COPY"
+                    value={watermarkText}
+                    onChange={(e) => setWatermarkText(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      outline: 'none',
+                      color: '#0f172a',
+                      backgroundColor: '#ffffff',
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                    This text will be stamped across all pages of your PDF document.
+                  </span>
                 </div>
               )}
 

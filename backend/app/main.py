@@ -11,6 +11,7 @@ from backend.app.api.routes_pdf import router as pdf_router
 from backend.app.api.routes_media import router as media_router, universal_media_convert_endpoint
 from backend.app.api.routes_compress import router as compress_router
 from backend.app.api.routes_converters import router as converters_router
+from backend.app.api.routes_contact import router as contact_router
 from backend.app.core.config import settings
 from backend.app.core.sandbox import sandbox_manager
 
@@ -79,6 +80,7 @@ app.include_router(media_router, prefix=settings.API_PREFIX)
 app.post("/api/media/convert", tags=["Universal Converters"])(universal_media_convert_endpoint)
 app.include_router(compress_router, prefix=settings.API_PREFIX)
 app.include_router(converters_router, prefix=settings.API_PREFIX)
+app.include_router(contact_router, prefix=settings.API_PREFIX)
 
 
 @app.get("/")

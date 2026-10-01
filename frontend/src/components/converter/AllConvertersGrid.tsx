@@ -202,6 +202,47 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
     }
   };
 
+  // Listen for navigation tool triggers from global header dropdowns
+  React.useEffect(() => {
+    const handleOpenToolEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ toolId: string }>;
+      const targetId = customEvent.detail?.toolId;
+      if (!targetId) return;
+
+      const found = ALL_23_CONVERTERS.find((c) => c.id === targetId);
+      if (found) {
+        handleOpenModal(found);
+        const elem = document.getElementById('all-converters-grid');
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    };
+
+    window.addEventListener('creed-open-tool', handleOpenToolEvent);
+
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramTool = urlParams.get('tool');
+      if (paramTool) {
+        const found = ALL_23_CONVERTERS.find((c) => c.id === paramTool);
+        if (found) {
+          setTimeout(() => {
+            handleOpenModal(found);
+            const elem = document.getElementById('all-converters-grid');
+            if (elem) {
+              elem.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 200);
+        }
+      }
+    }
+
+    return () => {
+      window.removeEventListener('creed-open-tool', handleOpenToolEvent);
+    };
+  }, []);
+
   const validateConverterFiles = (files: File[], converter: ConverterConfig): { valid: boolean; error?: string } => {
     if (converter.id === 'universal-converter' || converter.accept === '*/*') {
       return { valid: true };
