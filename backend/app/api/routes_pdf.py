@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from backend.app.core.sandbox import sandbox_manager
+from backend.app.core.sanitizer import sanitize_filename
 from backend.app.services.in_place_editor import (
     in_place_editor,
     InPlaceTextReplacement,
@@ -58,6 +59,12 @@ async def inspect_pdf(file: UploadFile = File(...)):
         )
 
     content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded PDF file is empty",
+        )
+
     if not pdf_engine.validate_pdf_bytes(content):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -70,6 +77,12 @@ async def inspect_pdf(file: UploadFile = File(...)):
 
     try:
         metadata = pdf_engine.extract_metadata(doc_path)
+    except ValueError as e:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
         sandbox_manager.cleanup_session(session_id)
         raise HTTPException(
@@ -77,9 +90,10 @@ async def inspect_pdf(file: UploadFile = File(...)):
             detail=f"Failed to extract PDF metadata: {e}",
         )
 
+    safe_name = sanitize_filename(file.filename, "document.pdf")
     return InspectResponse(
         session_id=session_id,
-        filename=file.filename,
+        filename=safe_name,
         metadata=metadata,
     )
 

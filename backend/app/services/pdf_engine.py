@@ -50,18 +50,24 @@ class PDFEngine:
             if isinstance(file_input, bytes):
                 if not cls.validate_pdf_bytes(file_input):
                     raise ValueError("File does not start with valid PDF magic bytes (%PDF-)")
-                return pymupdf.open(stream=file_input, filetype="pdf")
-            
-            path = Path(file_input)
-            if not path.exists():
-                raise FileNotFoundError(f"PDF file not found: {path}")
-            
-            with open(path, "rb") as f:
-                header = f.read(1024)
-            if b"%PDF-" not in header:
-                raise ValueError("File does not start with valid PDF magic bytes (%PDF-)")
+                doc = pymupdf.open(stream=file_input, filetype="pdf")
+            else:
+                path = Path(file_input)
+                if not path.exists():
+                    raise FileNotFoundError(f"PDF file not found: {path}")
                 
-            return pymupdf.open(str(path))
+                with open(path, "rb") as f:
+                    header = f.read(1024)
+                if b"%PDF-" not in header:
+                    raise ValueError("File does not start with valid PDF magic bytes (%PDF-)")
+                    
+                doc = pymupdf.open(str(path))
+
+            if doc.is_encrypted and doc.needs_pass:
+                doc.close()
+                raise ValueError("PDF is encrypted and password-protected. Please unlock before editing.")
+
+            return doc
         except Exception as e:
             if isinstance(e, (ValueError, FileNotFoundError)):
                 raise

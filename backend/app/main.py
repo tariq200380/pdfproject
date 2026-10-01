@@ -2,7 +2,8 @@
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.routes_health import router as health_router
@@ -44,6 +45,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def security_and_limits_middleware(request: Request, call_next):
+    """Applies OWASP security headers and checks Content-Length limits."""
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            length_bytes = int(content_length)
+            max_bytes = settings.MAX_FILE_SIZE_MB * 1024 * 1024
+            if length_bytes > max_bytes:
+                return JSONResponse(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    content={"detail": f"Payload size exceeds maximum allowed limit of {settings.MAX_FILE_SIZE_MB}MB"},
+                )
+        except ValueError:
+            pass
+
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
+
 
 # Register API Routers
 app.include_router(health_router, prefix=settings.API_PREFIX)

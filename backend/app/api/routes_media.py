@@ -15,6 +15,15 @@ from fastapi import (
 from fastapi.responses import FileResponse
 
 from backend.app.core.sandbox import sandbox_manager
+from backend.app.core.sanitizer import (
+    sanitize_filename,
+    validate_allowlist,
+    ALLOWED_AUDIO_FORMATS,
+    ALLOWED_AUDIO_BITRATES,
+    ALLOWED_VIDEO_FORMATS,
+    ALLOWED_VIDEO_RESOLUTIONS,
+    ALLOWED_IMAGE_FORMATS,
+)
 from backend.app.services.ffmpeg_service import (
     ffmpeg_service,
     AudioTranscodeOptions,
@@ -36,12 +45,19 @@ async def convert_audio_endpoint(
     sample_rate: Optional[int] = Form(None),
 ):
     """Transcodes uploaded audio into target format (MP3, WAV, AAC, FLAC, OGG, M4A)."""
-    fmt = target_format.lower().lstrip(".")
+    fmt = validate_allowlist(target_format.lstrip("."), ALLOWED_AUDIO_FORMATS, "target_format")
+    if bitrate:
+        bitrate = validate_allowlist(bitrate, ALLOWED_AUDIO_BITRATES, "bitrate")
+
     session_id, session_dir = sandbox_manager.create_session()
     
     src_ext = Path(file.filename).suffix if file.filename else ".bin"
     src_path = session_dir / f"input{src_ext}"
     content = await file.read()
+    if len(content) == 0:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded file is empty")
+
     src_path.write_bytes(content)
 
     out_path = session_dir / f"converted.{fmt}"
@@ -54,9 +70,10 @@ async def convert_audio_endpoint(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Audio conversion failed: {e}")
 
     background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    safe_stem = sanitize_filename(Path(file.filename or "audio").stem, "audio")
     return FileResponse(
         path=out_path,
-        filename=f"converted_{Path(file.filename).stem}.{fmt}",
+        filename=f"converted_{safe_stem}.{fmt}",
         media_type="application/octet-stream",
     )
 
@@ -69,12 +86,19 @@ async def convert_video_endpoint(
     resolution: Optional[str] = Form("original"),  # original, 1080p, 720p, 480p
 ):
     """Transcodes uploaded video into target container and resolution."""
-    fmt = target_format.lower().lstrip(".")
+    fmt = validate_allowlist(target_format.lstrip("."), ALLOWED_VIDEO_FORMATS, "target_format")
+    if resolution:
+        resolution = validate_allowlist(resolution, ALLOWED_VIDEO_RESOLUTIONS, "resolution")
+
     session_id, session_dir = sandbox_manager.create_session()
 
     src_ext = Path(file.filename).suffix if file.filename else ".bin"
     src_path = session_dir / f"input{src_ext}"
     content = await file.read()
+    if len(content) == 0:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded file is empty")
+
     src_path.write_bytes(content)
 
     out_path = session_dir / f"converted.{fmt}"
@@ -87,9 +111,10 @@ async def convert_video_endpoint(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Video conversion failed: {e}")
 
     background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    safe_stem = sanitize_filename(Path(file.filename or "video").stem, "video")
     return FileResponse(
         path=out_path,
-        filename=f"converted_{Path(file.filename).stem}.{fmt}",
+        filename=f"converted_{safe_stem}.{fmt}",
         media_type="application/octet-stream",
     )
 
@@ -110,6 +135,9 @@ async def convert_images_to_pdf_endpoint(
         ext = Path(file.filename).suffix if file.filename else ".png"
         fpath = session_dir / f"img_{i}{ext}"
         content = await file.read()
+        if len(content) == 0:
+            sandbox_manager.cleanup_session(session_id)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Uploaded image '{file.filename}' is empty")
         fpath.write_bytes(content)
         saved_paths.append(fpath)
 
@@ -136,7 +164,12 @@ async def convert_pdf_to_images_endpoint(
     dpi: int = Form(150),
 ):
     """Renders PDF pages into raster/vector images (returns single image or ZIP archive)."""
+    fmt = validate_allowlist(target_format.lstrip("."), ALLOWED_IMAGE_FORMATS, "target_format")
+
     content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded PDF is empty")
+
     if not pdf_engine.validate_pdf_bytes(content):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File is not a valid PDF document")
 
@@ -144,7 +177,6 @@ async def convert_pdf_to_images_endpoint(
     src_pdf = session_dir / "input.pdf"
     src_pdf.write_bytes(content)
 
-    fmt = target_format.lower().lstrip(".")
     out_file = session_dir / f"extracted.{fmt}"
 
     try:
@@ -157,10 +189,11 @@ async def convert_pdf_to_images_endpoint(
         "image/svg+xml" if fmt == "svg" else f"image/{fmt}"
     )
 
+    safe_name = sanitize_filename(result_path.name, f"extracted.{fmt}")
     background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
     return FileResponse(
         path=result_path,
-        filename=result_path.name,
+        filename=safe_name,
         media_type=media_type,
     )
 
@@ -169,15 +202,20 @@ async def convert_pdf_to_images_endpoint(
 async def convert_image_format_endpoint(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    target_format: str = Form(...),  # png, jpg, webp, heic
+    target_format: str = Form(...),  # png, jpg, webp, svg
 ):
     """Converts a single image across raster formats."""
-    fmt = target_format.lower().lstrip(".")
+    fmt = validate_allowlist(target_format.lstrip("."), ALLOWED_IMAGE_FORMATS, "target_format")
+
     session_id, session_dir = sandbox_manager.create_session()
 
     src_ext = Path(file.filename).suffix if file.filename else ".png"
     src_path = session_dir / f"input{src_ext}"
     content = await file.read()
+    if len(content) == 0:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded image is empty")
+
     src_path.write_bytes(content)
 
     out_path = session_dir / f"converted.{fmt}"
@@ -188,8 +226,9 @@ async def convert_image_format_endpoint(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Image conversion failed: {e}")
 
     background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    safe_stem = sanitize_filename(Path(file.filename or "image").stem, "image")
     return FileResponse(
         path=out_path,
-        filename=f"converted_{Path(file.filename).stem}.{fmt}",
+        filename=f"converted_{safe_stem}.{fmt}",
         media_type=f"image/{fmt}",
     )
