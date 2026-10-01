@@ -150,6 +150,7 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
   };
 
   const handleOpenModal = (converter: ConverterConfig) => {
+    const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     setActiveConverter(converter);
     setSelectedFiles([]);
     setIsProcessing(false);
@@ -158,14 +159,31 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
     setErrorMessage(null);
     setDownloadResult(null);
     setTargetExtension(converter.id === 'universal-converter' ? 'pdf' : 'pdf');
+
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        if (window.scrollY !== currentScrollY) {
+          window.scrollTo({ top: currentScrollY, behavior: 'instant' });
+        }
+      });
+    }
   };
 
   const handleCloseModal = () => {
     if (isProcessing) return;
+    const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     setActiveConverter(null);
     setSelectedFiles([]);
     setErrorMessage(null);
     setDownloadResult(null);
+
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        if (window.scrollY !== currentScrollY) {
+          window.scrollTo({ top: currentScrollY, behavior: 'instant' });
+        }
+      });
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,6 +322,7 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
             type="button"
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               setActiveCategory(tab.id as any);
             }}
             style={{
@@ -478,7 +497,10 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
             No converters match "{searchQuery}"
           </p>
           <button
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setSearchQuery('');
               setActiveCategory('all');
             }}
@@ -494,31 +516,43 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
       {/* ACTIVE CONVERTER MODAL (Frictionless, End-to-End Execution & Auto-Download) */}
       {/* ========================================================================= */}
       {activeConverter && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.45)',
-          backdropFilter: 'blur(3px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px',
-        }}>
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            width: '100%',
-            maxWidth: '560px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            overflow: 'hidden',
+        <div
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleCloseModal();
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(3px)',
             display: 'flex',
-            flexDirection: 'column',
-          }}>
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+          }}
+        >
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              border: '1px solid #e2e8f0',
+              width: '100%',
+              maxWidth: '560px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             {/* Modal Header */}
             <div style={{
               padding: '20px 24px',
@@ -552,7 +586,12 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
               </div>
 
               <button
-                onClick={handleCloseModal}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCloseModal();
+                }}
                 disabled={isProcessing}
                 style={{
                   background: 'none',
@@ -695,7 +734,12 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
 
                     {!isProcessing && progressStage !== 'completed' && (
                       <button
-                        onClick={() => setSelectedFiles([])}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedFiles([]);
+                        }}
                         style={{
                           background: 'none',
                           border: 'none',
@@ -753,7 +797,12 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => convertersApiClient.triggerBrowserDownload(downloadResult.blob, downloadResult.filename)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      convertersApiClient.triggerBrowserDownload(downloadResult.blob, downloadResult.filename);
+                    }}
                     className="btn btn-secondary"
                     style={{
                       padding: '6px 12px',
@@ -792,7 +841,11 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px' }}>
                 <button
                   type="button"
-                  onClick={handleCloseModal}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCloseModal();
+                  }}
                   disabled={isProcessing}
                   className="btn btn-secondary"
                   style={{ padding: '9px 18px', fontSize: '13px' }}
@@ -803,7 +856,11 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
                 {progressStage !== 'completed' && (
                   <button
                     type="button"
-                    onClick={executeActiveConversion}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      executeActiveConversion();
+                    }}
                     disabled={selectedFiles.length === 0 || isProcessing}
                     className="btn btn-primary"
                     style={{
