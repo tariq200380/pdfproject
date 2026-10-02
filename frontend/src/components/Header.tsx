@@ -24,9 +24,17 @@ import {
   Sparkles,
   Layers,
   ArrowRight,
+  Languages,
+  Unlock,
+  EyeOff,
+  GitCompare,
+  Camera,
+  Globe,
+  FileSearch,
+  Archive,
 } from 'lucide-react';
 
-type DropdownType = 'convert' | 'edit' | 'sign-protect' | null;
+type DropdownType = 'convert' | 'edit' | 'sign-protect' | 'intelligence' | null;
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
@@ -64,12 +72,8 @@ export const Header: React.FC = () => {
     setActiveDropdown(null);
 
     if (pathname === '/') {
-      // Dispatch event to active grids
+      // Dispatch event to active grids without dirtying the URL
       window.dispatchEvent(new CustomEvent('creed-open-tool', { detail: { toolId } }));
-      // Keep URL clean / in sync
-      if (typeof window !== 'undefined') {
-        window.history.pushState(null, '', `/?tool=${encodeURIComponent(toolId)}`);
-      }
     } else {
       router.push(`/?tool=${encodeURIComponent(toolId)}`);
     }
@@ -96,33 +100,14 @@ export const Header: React.FC = () => {
       }}
     >
       {/* Brand Identity (Left) */}
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-        <div
-          style={{
-            width: '34px',
-            height: '34px',
-            backgroundColor: '#e11d48',
-            color: '#ffffff',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: '16px',
-            boxShadow: '0 2px 4px rgba(225, 29, 72, 0.25)',
-          }}
-        >
-          C
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
-            Creed Tech
-          </span>
-          <span style={{ color: '#cbd5e1', fontWeight: 300, fontSize: '16px' }}>|</span>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>
-            Studio
-          </span>
-        </div>
+      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+        <span style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
+          Creed Tech
+        </span>
+        <span style={{ color: '#cbd5e1', fontWeight: 300, fontSize: '16px' }}>|</span>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>
+          Studio
+        </span>
       </Link>
 
       {/* Navigation Menu (Adobe Acrobat Style) */}
@@ -266,6 +251,34 @@ export const Header: React.FC = () => {
                       <div style={{ fontSize: '11px', color: '#64748b' }}>Raster graphic photos</div>
                     </div>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToolClick('html-to-pdf')}
+                    className="adobe-mega-item"
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Globe size={17} />
+                    </div>
+                    <div>
+                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>HTML to PDF</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>Clean HTML markup or URL</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToolClick('scan-to-pdf')}
+                    className="adobe-mega-item"
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Camera size={17} />
+                    </div>
+                    <div>
+                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Scan to PDF</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>Direct image / camera snapshot capture</div>
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -354,6 +367,20 @@ export const Header: React.FC = () => {
                       <div style={{ fontSize: '11px', color: '#64748b' }}>Lossless raster graphics</div>
                     </div>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToolClick('pdf-to-pdfa')}
+                    className="adobe-mega-item"
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#faf5ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Archive size={17} />
+                    </div>
+                    <div>
+                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to PDF/A</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>ISO 19005 archival standard</div>
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -426,6 +453,20 @@ export const Header: React.FC = () => {
                     <div>
                       <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Compress Media & Files</div>
                       <div style={{ fontSize: '11px', color: '#64748b' }}>Smart lossless compression</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToolClick('ocr-pdf')}
+                    className="adobe-mega-item"
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FileSearch size={17} />
+                    </div>
+                    <div>
+                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>OCR PDF</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>Extract searchable text layer</div>
                     </div>
                   </button>
                 </div>
@@ -587,6 +628,34 @@ export const Header: React.FC = () => {
                     <div style={{ fontSize: '11px', color: '#64748b' }}>Remove unwanted pages</div>
                   </div>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('scan-to-pdf')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Camera size={16} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Scan to PDF</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Camera snapshot / photo capture</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('pdf-forms')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileSearch size={16} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF Forms</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Inspect, populate & flatten</div>
+                  </div>
+                </button>
               </div>
             </div>
           )}
@@ -673,6 +742,150 @@ export const Header: React.FC = () => {
                   <div>
                     <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Add Watermark</div>
                     <div style={{ fontSize: '11px', color: '#64748b' }}>Stamp text watermark overlays</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('unlock-pdf')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Unlock size={17} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Unlock PDF</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Remove password restrictions</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('redact-pdf')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fef2f2', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <EyeOff size={17} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Redact PDF</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Permanent black-box masking</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('compare-pdf')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#faf5ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <GitCompare size={17} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Compare PDF</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Side-by-side visual diff</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 4. Document Intelligence ▾ Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            className={`adobe-nav-item ${activeDropdown === 'intelligence' ? 'active' : ''}`}
+            onClick={() => toggleDropdown('intelligence')}
+            aria-expanded={activeDropdown === 'intelligence'}
+          >
+            <Sparkles size={14} color="#2563eb" />
+            <span>Document Intelligence</span>
+            <ChevronDown
+              size={14}
+              style={{
+                transform: activeDropdown === 'intelligence' ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.15s ease',
+              }}
+            />
+          </button>
+
+          {activeDropdown === 'intelligence' && (
+            <div
+              className="adobe-mega-menu"
+              style={{
+                width: '340px',
+                left: '-80px',
+                padding: '20px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  color: '#64748b',
+                  marginBottom: '12px',
+                  paddingLeft: '10px',
+                }}
+              >
+                Intelligent Document Suite
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('summarize-doc')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Sparkles size={17} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Document Summarizer</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Extractive key takeaways & overview</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('translate-doc')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Languages size={17} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Document Translator</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>In-memory multi-language pipeline</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('pdf-to-markdown')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#faf5ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileCode size={17} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to Markdown</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Headings & table formatting to .md</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('ocr-pdf')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileSearch size={17} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>OCR Text Extraction</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Searchable text layer via Tesseract</div>
                   </div>
                 </button>
               </div>

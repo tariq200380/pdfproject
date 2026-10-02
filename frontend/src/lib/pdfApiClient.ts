@@ -262,6 +262,167 @@ class PdfApiClient {
     return res.blob();
   }
 
+  async scanToPdf(files: File[]): Promise<Blob> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+
+    const res = await fetch(`${this.baseUrl}/scan-to-pdf`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to scan images to PDF' }));
+      throw new Error(err.detail || 'Scan to PDF failed');
+    }
+
+    return res.blob();
+  }
+
+  async ocrPdf(file: File, lang: string = 'eng', returnFile: boolean = false): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('lang', lang);
+    formData.append('return_file', String(returnFile));
+
+    const res = await fetch(`${this.baseUrl}/ocr`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to OCR document' }));
+      throw new Error(err.detail || 'OCR failed');
+    }
+
+    if (returnFile) {
+      return res.blob();
+    }
+    return res.json();
+  }
+
+  async htmlToPdf(htmlContent?: string, url?: string): Promise<Blob> {
+    const formData = new FormData();
+    if (htmlContent) formData.append('html_content', htmlContent);
+    if (url) formData.append('url', url);
+
+    const res = await fetch(`${this.baseUrl}/html-to-pdf`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to convert HTML to PDF' }));
+      throw new Error(err.detail || 'HTML to PDF failed');
+    }
+
+    return res.blob();
+  }
+
+  async toPdfa(file: File, conformance: string = 'PDF/A-1b'): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('conformance', conformance);
+
+    const res = await fetch(`${this.baseUrl}/to-pdfa`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to convert to PDF/A' }));
+      throw new Error(err.detail || 'PDF/A export failed');
+    }
+
+    return res.blob();
+  }
+
+  async pdfForms(file: File, fieldData?: Record<string, any>, flatten: boolean = false, returnFile: boolean = false): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (fieldData) formData.append('field_data', JSON.stringify(fieldData));
+    formData.append('flatten', String(flatten));
+    formData.append('return_file', String(returnFile));
+
+    const res = await fetch(`${this.baseUrl}/forms`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to process PDF form' }));
+      throw new Error(err.detail || 'Form processing failed');
+    }
+
+    if (returnFile || flatten) {
+      return res.blob();
+    }
+    return res.json();
+  }
+
+  async unlockPdf(file: File, password: string): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('password', password);
+
+    const res = await fetch(`${this.baseUrl}/unlock`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to unlock PDF' }));
+      throw new Error(err.detail || 'Unlocking failed');
+    }
+
+    return res.blob();
+  }
+
+  async redactPdf(file: File, searchTerms?: string[], coordinates?: any[]): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (searchTerms && searchTerms.length > 0) {
+      formData.append('search_terms', JSON.stringify(searchTerms));
+    }
+    if (coordinates && coordinates.length > 0) {
+      formData.append('coordinates', JSON.stringify(coordinates));
+    }
+
+    const res = await fetch(`${this.baseUrl}/redact`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to redact PDF' }));
+      throw new Error(err.detail || 'Redaction failed');
+    }
+
+    return res.blob();
+  }
+
+  async comparePdfs(file1: File, file2: File, returnFile: boolean = false): Promise<any> {
+    const formData = new FormData();
+    formData.append('file1', file1);
+    formData.append('file2', file2);
+    formData.append('return_file', String(returnFile));
+
+    const res = await fetch(`${this.baseUrl}/compare`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to compare PDFs' }));
+      throw new Error(err.detail || 'Comparison failed');
+    }
+
+    if (returnFile) {
+      return res.blob();
+    }
+    return res.json();
+  }
+
   triggerBrowserDownload(blob: Blob, filename: string): void {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

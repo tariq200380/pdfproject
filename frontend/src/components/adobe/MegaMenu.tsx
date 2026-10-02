@@ -16,7 +16,14 @@ import {
   Crop,
   Trash2,
   Lock,
+  Unlock,
   PenTool,
+  EyeOff,
+  GitCompare,
+  Camera,
+  Globe,
+  FileSearch,
+  Archive,
 } from 'lucide-react';
 
 export type ToolActionId =
@@ -45,7 +52,18 @@ export type ToolActionId =
   | 'compress-video'
   | 'compress-audio'
   | 'compress-image'
-  | 'all-tools';
+  | 'all-tools'
+  | 'summarize-doc'
+  | 'translate-doc'
+  | 'pdf-to-markdown'
+  | 'scan-to-pdf'
+  | 'ocr-pdf'
+  | 'html-to-pdf'
+  | 'pdf-to-pdfa'
+  | 'pdf-forms'
+  | 'unlock-pdf'
+  | 'redact-pdf'
+  | 'compare-pdf';
 
 interface MegaMenuProps {
   menuType: 'convert' | 'edit' | 'compress';
@@ -132,6 +150,60 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ menuType, onSelectTool, onCl
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                   High-efficiency photo formats to standard PDF
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleItemClick('scan-to-pdf')}
+              className="adobe-mega-item"
+            >
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#eff6ff',
+                color: '#2563eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Camera size={18} />
+              </div>
+              <div>
+                <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                  Scan to PDF
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  Direct image / camera snapshot capture to PDF
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleItemClick('html-to-pdf')}
+              className="adobe-mega-item"
+            >
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#f0fdf4',
+                color: '#16a34a',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Globe size={18} />
+              </div>
+              <div>
+                <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                  HTML to PDF
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  Render clean HTML or URL directly to PDF
                 </div>
               </div>
             </button>
@@ -228,6 +300,33 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ menuType, onSelectTool, onCl
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                   MP3, WAV, AAC, FLAC, OGG, M4A with bitrate control
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleItemClick('pdf-to-pdfa')}
+              className="adobe-mega-item"
+            >
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#faf5ff',
+                color: '#7c3aed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Archive size={18} />
+              </div>
+              <div>
+                <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                  PDF to PDF/A
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  ISO 19005 compliant archival PDF export
                 </div>
               </div>
             </button>
@@ -505,6 +604,118 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ menuType, onSelectTool, onCl
               </div>
             </div>
           </button>
+
+          <button
+            onClick={() => handleItemClick('pdf-forms')}
+            className="adobe-mega-item"
+          >
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              backgroundColor: '#eff6ff',
+              border: '1px solid #bfdbfe',
+              color: '#2563eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <FileSearch size={18} />
+            </div>
+            <div>
+              <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                PDF Forms
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                Inspect, populate & flatten form fields
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleItemClick('unlock-pdf')}
+            className="adobe-mega-item"
+          >
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              backgroundColor: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              color: '#16a34a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Unlock size={18} />
+            </div>
+            <div>
+              <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                Unlock PDF
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                Decrypt and remove password security
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleItemClick('redact-pdf')}
+            className="adobe-mega-item"
+          >
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecdd3',
+              color: '#e11d48',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <EyeOff size={18} />
+            </div>
+            <div>
+              <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                Redact PDF
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                Permanent black-box masking
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleItemClick('compare-pdf')}
+            className="adobe-mega-item"
+          >
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              backgroundColor: '#faf5ff',
+              border: '1px solid #e9d5ff',
+              color: '#7c3aed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <GitCompare size={18} />
+            </div>
+            <div>
+              <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                Compare PDF
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                Side-by-side visual diff analysis
+              </div>
+            </div>
+          </button>
         </div>
 
         <div style={{
@@ -660,6 +871,33 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ menuType, onSelectTool, onCl
               </div>
               <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                 Stream optimization and raster downsampling
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleItemClick('ocr-pdf')}
+            className="adobe-mega-item"
+          >
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              backgroundColor: '#fef3c7',
+              color: '#d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <FileSearch size={18} />
+            </div>
+            <div>
+              <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                OCR PDF
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                Searchable text layer extraction via OCR
               </div>
             </div>
           </button>

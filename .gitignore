@@ -13,4 +13,5 @@ sandbox/
 tmp/
 node_modules/
 .next/
+*.tsbuildinfo
 .DS_Store

@@ -50,6 +50,37 @@ def _build_compression_response(
     )
 
 
+@router.post("/pdf")
+async def compress_pdf_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+):
+    """Compresses uploaded PDF document using PyMuPDF lossless optimization."""
+    session_id, session_dir = sandbox_manager.create_session()
+    src_path = session_dir / "input.pdf"
+    content = await file.read()
+    if len(content) == 0:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded PDF is empty")
+
+    src_path.write_bytes(content)
+    out_path = session_dir / "compressed.pdf"
+    try:
+        result = compressor_service.compress_pdf(src_path, output_path=out_path)
+    except Exception as e:
+        sandbox_manager.cleanup_session(session_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"PDF compression failed: {e}")
+
+    safe_stem = sanitize_filename(Path(file.filename or "document").stem, "document")
+    return _build_compression_response(
+        result=result,
+        session_id=session_id,
+        download_filename=f"compressed_{safe_stem}.pdf",
+        media_type="application/pdf",
+        background_tasks=background_tasks,
+    )
+
+
 @router.post("/image")
 async def compress_image_endpoint(
     background_tasks: BackgroundTasks,

@@ -176,7 +176,8 @@ class MediaApiClient {
     formData.append('preset', preset);
 
     let endpoint = `${this.compressBase}/image`;
-    if (category === 'video') endpoint = `${this.compressBase}/video`;
+    if (category === 'pdf') endpoint = `${this.compressBase}/pdf`;
+    else if (category === 'video') endpoint = `${this.compressBase}/video`;
     else if (category === 'audio') endpoint = `${this.compressBase}/audio`;
 
     const res = await fetch(endpoint, {
@@ -195,7 +196,7 @@ class MediaApiClient {
     const percentSaved = parseFloat(res.headers.get('x-percent-saved') || '0');
 
     const blob = await res.blob();
-    const ext = category === 'video' ? 'mp4' : (category === 'audio' ? 'm4a' : 'webp');
+    const ext = category === 'pdf' ? 'pdf' : (category === 'video' ? 'mp4' : (category === 'audio' ? 'm4a' : 'webp'));
     const filename = this.extractFilename(res, `compressed_${file.name.split('.')[0]}.${ext}`);
 
     return {

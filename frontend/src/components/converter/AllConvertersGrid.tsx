@@ -48,14 +48,14 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
 
   // Filter converters
   const filteredConverters = ALL_23_CONVERTERS.filter((c) => {
-    const matchesCategory = activeCategory === 'all' || c.category === activeCategory;
     const q = searchQuery.toLowerCase().trim();
+    const matchesCategory = activeCategory === 'all' || c.category === activeCategory;
+    const searchableText = `${c.title} ${c.description} ${c.accept} ${c.badge || ''} ${c.id}`.toLowerCase();
+    const queryWords = q.split(/\s+/).filter(Boolean);
     const matchesQuery =
-      !q ||
-      c.title.toLowerCase().includes(q) ||
-      c.description.toLowerCase().includes(q) ||
-      c.accept.toLowerCase().includes(q) ||
-      (c.badge && c.badge.toLowerCase().includes(q));
+      queryWords.length === 0 ||
+      queryWords.every((w) => searchableText.includes(w)) ||
+      searchableText.includes(q);
     return matchesCategory && matchesQuery;
   });
 
@@ -194,6 +194,9 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
     setDownloadResult(null);
 
     if (typeof window !== 'undefined') {
+      if (window.location.search) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
       window.requestAnimationFrame(() => {
         if (window.scrollY !== currentScrollY) {
           window.scrollTo({ top: currentScrollY, behavior: 'instant' });
@@ -225,6 +228,9 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const paramTool = urlParams.get('tool');
       if (paramTool) {
+        // Immediately clean the URL so refreshing does NOT keep reopening modal
+        window.history.replaceState(null, '', window.location.pathname);
+
         const found = ALL_23_CONVERTERS.find((c) => c.id === paramTool);
         if (found) {
           setTimeout(() => {
@@ -369,7 +375,7 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', margin: 0 }}>
-              All 23 Adobe Acrobat Converters
+              All PDF Converters
             </h3>
             <span style={{
               fontSize: '12px',
@@ -393,9 +399,15 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
           <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '10px' }} />
           <input
             type="text"
-            placeholder="Search 23 converters..."
+            placeholder="Search converters..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSearchQuery(val);
+              if (val.trim() && activeCategory !== 'all') {
+                setActiveCategory('all');
+              }
+            }}
             style={{
               width: '100%',
               padding: '8px 12px 8px 36px',

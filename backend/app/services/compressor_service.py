@@ -38,6 +38,25 @@ class CompressorService:
         )
 
     @classmethod
+    def compress_pdf(
+        cls,
+        input_path: Path,
+        output_path: Optional[Path] = None,
+    ) -> CompressionResult:
+        """Compresses PDF documents using PyMuPDF stream deflation and garbage cleanup."""
+        import pymupdf
+        orig_size = input_path.stat().st_size
+        out_p = output_path or input_path.with_name(f"{input_path.stem}_compressed.pdf")
+        out_p.parent.mkdir(parents=True, exist_ok=True)
+
+        doc = pymupdf.open(input_path)
+        doc.save(out_p, garbage=4, deflate=True, clean=True)
+        doc.close()
+
+        comp_size = out_p.stat().st_size
+        return cls._calculate_metrics(orig_size, comp_size, out_p)
+
+    @classmethod
     def compress_image(
         cls,
         input_path: Path,

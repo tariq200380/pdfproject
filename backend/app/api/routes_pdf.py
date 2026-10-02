@@ -427,36 +427,6 @@ async def delete_pages_endpoint(
     )
 
 
-@router.post("/crop")
-async def crop_pdf_endpoint(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    margin_percent: float = Form(5.0),
-):
-    """Crops PDF margins by given percentage."""
-    content = await file.read()
-    if not pdf_engine.validate_pdf_bytes(content):
-        raise HTTPException(status_code=400, detail="Uploaded file is not a valid PDF")
-
-    session_id, session_dir = sandbox_manager.create_session()
-    src_path = session_dir / "input.pdf"
-    src_path.write_bytes(content)
-    out_path = session_dir / "cropped.pdf"
-
-    try:
-        pdf_ops.crop_pdf(src_path, margin_percent, out_path)
-    except Exception as e:
-        sandbox_manager.cleanup_session(session_id)
-        raise HTTPException(status_code=500, detail=f"Cropping failed: {e}")
-
-    background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
-    stem = Path(file.filename or "document").stem
-    return FileResponse(
-        path=out_path,
-        filename=f"{stem}_cropped.pdf",
-        media_type="application/pdf",
-    )
-
 
 @router.post("/number-pages")
 async def number_pages_endpoint(

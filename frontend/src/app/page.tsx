@@ -415,21 +415,26 @@ export default function StudioHomePage() {
               justifyContent: 'space-between',
               marginBottom: '16px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>
-                  Staged Workspace Files
-                </h3>
-                <span style={{
-                  fontSize: '12px',
-                  color: '#0f172a',
-                  backgroundColor: '#f1f5f9',
-                  border: '1px solid #cbd5e1',
-                  padding: '3px 10px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                }}>
-                  {stagedFiles.length}
-                </span>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>
+                    Staged Workspace Files
+                  </h3>
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#0f172a',
+                    backgroundColor: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    padding: '3px 10px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {stagedFiles.length}
+                  </span>
+                </div>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
+                  Your file is ready. Select an action below to convert, edit, or compress.
+                </p>
               </div>
 
               <button

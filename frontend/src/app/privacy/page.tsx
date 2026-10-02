@@ -978,7 +978,7 @@ export default function TrustAndPrivacyCenterPage() {
               </h3>
             </div>
             <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.65, margin: 0 }}>
-              All 23 Adobe Acrobat Online converters and media transcoding utilities run via vetted binaries (native C-based PyMuPDF, FFmpeg 6.0+, and Pillow). All subprocess invocations use strict argument allowlists with <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>shell=False</code>, neutralizing injection attacks and arbitrary command execution.
+              All PDF Online converters and media transcoding utilities run via vetted binaries (native C-based PyMuPDF, FFmpeg 6.0+, and Pillow). All subprocess invocations use strict argument allowlists with <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>shell=False</code>, neutralizing injection attacks and arbitrary command execution.
             </p>
           </div>
 

@@ -557,90 +557,246 @@ a {
   color: #ffffff;
 }
 
-/* Creed Tech Minimalist & Premium Footer */
-.creed-footer {
-  background-color: #fafbfd;
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
-  padding: 32px 32px;
-  color: #475569;
-  font-size: 13px;
-  margin-top: auto;
+/* Footer & Layout Utilities */
+.whitespace-nowrap {
+  white-space: nowrap;
 }
 
-.creed-footer-inner {
-  max-width: 1240px;
-  margin: 0 auto;
+.flex {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 24px;
 }
 
-.creed-footer-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 260px;
-  justify-content: flex-start;
-}
-
-.creed-footer-brand-text {
-  display: flex;
+.flex-col {
   flex-direction: column;
-  gap: 2px;
 }
 
-.creed-footer-center {
-  display: flex;
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.items-center {
   align-items: center;
+}
+
+.justify-center {
   justify-content: center;
-  gap: 24px;
-  flex: 1;
-  min-width: 240px;
 }
 
-.creed-footer-link {
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.w-auto {
+  width: auto;
+}
+
+.h-6 {
+  height: 24px;
+}
+
+.h-7 {
+  height: 28px;
+}
+
+.object-contain {
+  object-fit: contain;
+}
+
+.select-none {
+  user-select: none;
+}
+
+.gap-1 {
+  gap: 4px;
+}
+
+.gap-1\.5 {
+  gap: 6px;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-3 {
+  gap: 12px;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.gap-5 {
+  gap: 20px;
+}
+
+.gap-x-2 {
+  column-gap: 8px;
+}
+
+.gap-x-2\.5 {
+  column-gap: 10px;
+}
+
+.gap-x-3 {
+  column-gap: 12px;
+}
+
+.gap-x-4 {
+  column-gap: 16px;
+}
+
+.gap-x-5 {
+  column-gap: 20px;
+}
+
+.gap-y-1 {
+  row-gap: 4px;
+}
+
+.gap-y-2 {
+  row-gap: 8px;
+}
+
+.text-xs {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.text-slate-500 {
   color: #64748b;
-  font-size: 13px;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: color 0.18s ease;
 }
 
-.creed-footer-link:hover {
+.text-slate-400 {
+  color: #94a3b8;
+}
+
+.text-slate-300 {
+  color: #cbd5e1;
+}
+
+.hover\:text-slate-900:hover {
   color: #0f172a;
 }
 
-.creed-footer-right {
+.transition-colors {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.border-t {
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+.border-slate-200\/80 {
+  border-color: rgba(226, 232, 240, 0.8);
+}
+
+.bg-white\/50 {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.py-3\.5 {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.py-4 {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.px-6 {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+@media (min-width: 768px) {
+  .md\:flex-row {
+    flex-direction: row;
+  }
+  .md\:px-12 {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+  .md\:h-7 {
+    height: 28px;
+  }
+}
+
+/* Creed Tech Minimalist & Adobe-Inspired Single-Row Footer */
+.creed-footer {
+  width: 100%;
+  margin-top: auto;
+  background-color: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 14px 24px;
+  font-size: 12px;
+  color: #64748b;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  flex: 1;
-  min-width: 240px;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .creed-footer {
+    padding: 14px 48px;
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 767px) {
+  .creed-footer {
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+    justify-content: center;
+  }
 }
 
 .creed-footer-social-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  color: #64748b;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: #94a3b8;
   background-color: transparent;
   border: 1px solid transparent;
   text-decoration: none;
-  transition: color 0.18s ease, background-color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
 }
 
 .creed-footer-social-btn:hover {
   color: #0f172a;
   background-color: #f1f5f9;
-  border-color: rgba(226, 232, 240, 0.8);
   transform: translateY(-1px);
 }
 
@@ -648,27 +804,4 @@ a {
   transform: translateY(0);
 }
 
-@media (max-width: 840px) {
-  .creed-footer-inner {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 20px;
-  }
-
-  .creed-footer-left {
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-  }
-
-  .creed-footer-center {
-    justify-content: center;
-    gap: 20px;
-  }
-
-  .creed-footer-right {
-    justify-content: center;
-  }
-}
 

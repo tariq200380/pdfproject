@@ -21,7 +21,6 @@ import {
   Video,
   Music,
   Image as ImageIcon,
-  Search,
   Upload,
   CheckCircle2,
   AlertCircle,
@@ -31,13 +30,22 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Languages,
+  FileCode,
+  Unlock,
+  GitCompare,
+  Camera,
+  Globe,
+  FileSearch,
+  Archive,
 } from 'lucide-react';
+import { DocumentIntelligenceModal, IntelligenceTab } from './modals/DocumentIntelligenceModal';
 
 export interface ToolItem {
   id: ToolActionId;
   title: string;
   description: string;
-  section: 'edit' | 'sign-protect' | 'convert' | 'compress';
+  section: 'edit' | 'sign-protect' | 'convert' | 'compress' | 'intelligence';
   buttonLabel: 'Edit' | 'Open' | 'Protect';
   icon: React.ReactNode;
   iconBg: string;
@@ -48,7 +56,7 @@ export interface ToolItem {
 }
 
 const SECTIONS_DATA: {
-  key: 'edit' | 'sign-protect' | 'convert' | 'compress';
+  key: 'edit' | 'sign-protect' | 'convert' | 'compress' | 'intelligence';
   title: string;
   subtitle: string;
   tools: ToolItem[];
@@ -178,6 +186,30 @@ const SECTIONS_DATA: {
         iconBorder: '#fecdd3',
         badge: 'Pagination',
       },
+      {
+        id: 'scan-to-pdf',
+        title: 'Scan to PDF',
+        description: 'Direct image or camera snapshot capture converted into a unified multi-page PDF document.',
+        section: 'edit',
+        buttonLabel: 'Open',
+        icon: <Camera size={22} />,
+        iconBg: '#eff6ff',
+        iconColor: '#2563eb',
+        iconBorder: '#bfdbfe',
+        badge: 'Capture',
+      },
+      {
+        id: 'pdf-forms',
+        title: 'PDF Forms',
+        description: 'AcroForm field inspection, interactive data population, and permanent flattening.',
+        section: 'edit',
+        buttonLabel: 'Open',
+        icon: <FileSearch size={22} />,
+        iconBg: '#eff6ff',
+        iconColor: '#2563eb',
+        iconBorder: '#bfdbfe',
+        badge: 'AcroForm',
+      },
     ],
   },
   {
@@ -232,6 +264,42 @@ const SECTIONS_DATA: {
         iconColor: '#d97706',
         iconBorder: '#fde68a',
         badge: 'Overlay',
+      },
+      {
+        id: 'unlock-pdf',
+        title: 'Unlock PDF',
+        description: 'Decrypt and remove password restrictions with valid credentials.',
+        section: 'sign-protect',
+        buttonLabel: 'Open',
+        icon: <Unlock size={22} />,
+        iconBg: '#f0fdf4',
+        iconColor: '#16a34a',
+        iconBorder: '#bbf7d0',
+        badge: 'Decrypt',
+      },
+      {
+        id: 'redact-pdf',
+        title: 'Redact PDF',
+        description: 'Permanent black-box masking of selected sensitive text or coordinates.',
+        section: 'sign-protect',
+        buttonLabel: 'Open',
+        icon: <EyeOff size={22} />,
+        iconBg: '#fef2f2',
+        iconColor: '#e11d48',
+        iconBorder: '#fecdd3',
+        badge: 'Sanitize',
+      },
+      {
+        id: 'compare-pdf',
+        title: 'Compare PDF',
+        description: 'Side-by-side visual difference and textual change analysis between two PDFs.',
+        section: 'sign-protect',
+        buttonLabel: 'Open',
+        icon: <GitCompare size={22} />,
+        iconBg: '#faf5ff',
+        iconColor: '#7c3aed',
+        iconBorder: '#e9d5ff',
+        badge: 'Diff',
       },
     ],
   },
@@ -312,6 +380,30 @@ const SECTIONS_DATA: {
         iconBorder: '#fde68a',
         badge: 'Extraction',
       },
+      {
+        id: 'html-to-pdf',
+        title: 'HTML to PDF',
+        description: 'Render clean HTML markup or webpage URL directly to high-fidelity PDF.',
+        section: 'convert',
+        buttonLabel: 'Open',
+        icon: <Globe size={22} />,
+        iconBg: '#f0fdf4',
+        iconColor: '#16a34a',
+        iconBorder: '#bbf7d0',
+        badge: 'Web-to-PDF',
+      },
+      {
+        id: 'pdf-to-pdfa',
+        title: 'PDF to PDF/A',
+        description: 'Convert standard PDF to ISO 19005 compliant archival PDF with metadata preservation.',
+        section: 'convert',
+        buttonLabel: 'Open',
+        icon: <Archive size={22} />,
+        iconBg: '#faf5ff',
+        iconColor: '#7c3aed',
+        iconBorder: '#e9d5ff',
+        badge: 'Archival',
+      },
     ],
   },
   {
@@ -330,6 +422,18 @@ const SECTIONS_DATA: {
         iconColor: '#e11d48',
         iconBorder: '#fecdd3',
         badge: 'Optimized',
+      },
+      {
+        id: 'ocr-pdf',
+        title: 'OCR PDF',
+        description: 'Extract searchable text layer and characters from scanned PDF documents via OCR.',
+        section: 'compress',
+        buttonLabel: 'Open',
+        icon: <FileSearch size={22} />,
+        iconBg: '#fef3c7',
+        iconColor: '#d97706',
+        iconBorder: '#fde68a',
+        badge: 'Searchable',
       },
       {
         id: 'compress-video',
@@ -369,6 +473,49 @@ const SECTIONS_DATA: {
       },
     ],
   },
+  {
+    key: 'intelligence',
+    title: 'Document Intelligence',
+    subtitle: 'Local extractive summarization, structure-preserving translation & Markdown extraction',
+    tools: [
+      {
+        id: 'summarize-doc',
+        title: 'Document Summarizer',
+        description: 'Extract key bullet takeaways, executive overview, and structured highlights locally.',
+        section: 'intelligence',
+        buttonLabel: 'Open',
+        icon: <Sparkles size={22} />,
+        iconBg: '#eff6ff',
+        iconColor: '#2563eb',
+        iconBorder: '#bfdbfe',
+        badge: 'TextRank',
+      },
+      {
+        id: 'translate-doc',
+        title: 'Document Translator',
+        description: 'Translate document paragraphs into Urdu, Arabic, Spanish, French, German, or Chinese.',
+        section: 'intelligence',
+        buttonLabel: 'Open',
+        icon: <Languages size={22} />,
+        iconBg: '#f0fdf4',
+        iconColor: '#16a34a',
+        iconBorder: '#bbf7d0',
+        badge: 'Multi-Lang',
+      },
+      {
+        id: 'pdf-to-markdown',
+        title: 'PDF to Markdown',
+        description: 'Extract headings, code blocks, tables, and formatted text directly into clean .md.',
+        section: 'intelligence',
+        buttonLabel: 'Open',
+        icon: <FileCode size={22} />,
+        iconBg: '#faf5ff',
+        iconColor: '#7c3aed',
+        iconBorder: '#e9d5ff',
+        badge: 'Markdown',
+      },
+    ],
+  },
 ];
 
 interface ToolsGridProps {
@@ -384,7 +531,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   stagedPdfFile,
   categoryFilter,
 }) => {
-  const [activeCategory, setActiveCategory] = useState<'all' | 'edit' | 'sign-protect' | 'convert' | 'compress'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'edit' | 'sign-protect' | 'convert' | 'compress' | 'intelligence'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Active Tool Modal State
@@ -395,6 +542,11 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const [progressStage, setProgressStage] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [downloadBlob, setDownloadBlob] = useState<{ blob: Blob; filename: string } | null>(null);
+
+  // Document Intelligence Modal State
+  const [intelligenceModalOpen, setIntelligenceModalOpen] = useState(false);
+  const [intelligenceInitialTab, setIntelligenceInitialTab] = useState<IntelligenceTab>('summarize');
+  const [intelligenceFile, setIntelligenceFile] = useState<File | null>(null);
 
   // Form Inputs
   const [protectPassword, setProtectPassword] = useState('');
@@ -409,6 +561,14 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const [recipientEmail, setRecipientEmail] = useState('');
   const [targetFormat, setTargetFormat] = useState<string>('mp3');
   const [watermarkText, setWatermarkText] = useState('CONFIDENTIAL');
+
+  // Additional New Tools Form Inputs
+  const [unlockPassword, setUnlockPassword] = useState('');
+  const [redactTerms, setRedactTerms] = useState('Confidential, Private');
+  const [htmlInput, setHtmlInput] = useState('<h1>Document Report</h1><p>Rendered directly to PDF.</p>');
+  const [webUrlInput, setWebUrlInput] = useState('');
+  const [pdfaConformance, setPdfaConformance] = useState('PDF/A-1b');
+  const [ocrLang, setOcrLang] = useState('eng');
 
   // Canvas ref for Fill & Sign
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -435,7 +595,18 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         toolId === 'protect-pdf' ||
         toolId === 'add-watermark' ||
         toolId === 'pdf-to-images' ||
-        toolId === 'images-to-pdf'
+        toolId === 'images-to-pdf' ||
+        toolId === 'summarize-doc' ||
+        toolId === 'translate-doc' ||
+        toolId === 'pdf-to-markdown' ||
+        toolId === 'scan-to-pdf' ||
+        toolId === 'ocr-pdf' ||
+        toolId === 'html-to-pdf' ||
+        toolId === 'pdf-to-pdfa' ||
+        toolId === 'pdf-forms' ||
+        toolId === 'unlock-pdf' ||
+        toolId === 'redact-pdf' ||
+        toolId === 'compare-pdf'
       );
     }
     if (filter === 'media') {
@@ -451,7 +622,8 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         toolId === 'compress-pdf' ||
         toolId === 'compress-video' ||
         toolId === 'compress-image' ||
-        toolId === 'compress-audio'
+        toolId === 'compress-audio' ||
+        toolId === 'ocr-pdf'
       );
     }
     return true;
@@ -488,12 +660,14 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
 
     const isVideoTool = toolId === 'convert-video' || toolId === 'compress-video' || toolId.includes('video');
     const isAudioTool = toolId === 'convert-audio' || toolId === 'compress-audio' || toolId.includes('audio');
-    const isImageTool = toolId === 'images-to-pdf' || toolId === 'compress-image' || toolId.includes('image');
-    const isPdfTool = !isVideoTool && !isAudioTool && !isImageTool && toolId !== 'universal-converter';
+    const isImageTool = toolId === 'images-to-pdf' || toolId === 'compress-image' || toolId === 'scan-to-pdf' || toolId.includes('image');
+    const isHtmlTool = toolId === 'html-to-pdf';
+    const isPdfTool = !isVideoTool && !isAudioTool && !isImageTool && !isHtmlTool && toolId !== 'universal-converter';
 
     const videoExts = new Set(['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', 'm4v', '3gp', 'ts', 'ogv', 'gif', 'mp3']);
     const audioExts = new Set(['mp3', 'wav', 'aac', 'flac', 'ogg', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'mp4', 'mkv', 'webm', 'mov']);
     const imageExts = new Set(['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'bmp', 'tiff', 'tif', 'gif', 'svg']);
+    const htmlExts = new Set(['html', 'htm', 'txt']);
 
     for (const f of files) {
       const ext = f.name.split('.').pop()?.toLowerCase() || '';
@@ -509,6 +683,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         if (!f.type.startsWith('image/') && !imageExts.has(ext) && f.type !== '') {
           return { valid: false, error: `Please select a valid image file (.jpg, .png, .webp, .heic, etc.).` };
         }
+      } else if (isHtmlTool) {
+        if (!htmlExts.has(ext)) {
+          return { valid: false, error: `Please select an HTML file (.html, .htm) or enter code/URL directly.` };
+        }
       } else if (isPdfTool) {
         if (f.type !== 'application/pdf' && ext !== 'pdf' && f.type !== '') {
           return { valid: false, error: `Please select a valid PDF file (.pdf).` };
@@ -520,8 +698,14 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
 
   const getToolFormatDescription = () => {
     if (!activeModalTool) return 'Supports standard PDF documents (.pdf)';
-    if (activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'compress-image') {
+    if (activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'compress-image' || activeModalTool.id === 'scan-to-pdf') {
       return 'Supports all image formats (JPG, PNG, WEBP, HEIC, TIFF, BMP, GIF)';
+    }
+    if (activeModalTool.id === 'html-to-pdf') {
+      return 'Supports HTML files (.html, .htm) or direct URL & markup input';
+    }
+    if (activeModalTool.id === 'compare-pdf') {
+      return 'Requires two PDF documents (.pdf) for visual & textual comparison';
     }
     if (activeModalTool.id === 'convert-video' || activeModalTool.id === 'compress-video') {
       return 'Supports standard video formats (MP4, MOV, MKV, AVI, WEBM, FLV, WMV)';
@@ -533,6 +717,16 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   };
 
   const handleCardClick = (tool: ToolItem) => {
+    // If it is an intelligence tool, launch DocumentIntelligenceModal
+    if (tool.id === 'summarize-doc' || tool.id === 'translate-doc' || tool.id === 'pdf-to-markdown') {
+      const tab: IntelligenceTab =
+        tool.id === 'translate-doc' ? 'translate' : tool.id === 'pdf-to-markdown' ? 'markdown' : 'summarize';
+      setIntelligenceInitialTab(tab);
+      setIntelligenceFile(stagedPdfFile || null);
+      setIntelligenceModalOpen(true);
+      return;
+    }
+
     // If it is Edit PDF and staged file exists, launch editor directly
     if (tool.id === 'edit-pdf' && stagedPdfFile && onOpenEditor) {
       onOpenEditor(stagedPdfFile);
@@ -571,6 +765,9 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     setModalFiles([]);
     setErrorMessage(null);
     setDownloadBlob(null);
+    if (typeof window !== 'undefined' && window.location.search) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
   };
 
   // Listen for navigation tool triggers from global header dropdowns
@@ -579,6 +776,16 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
       const customEvent = e as CustomEvent<{ toolId: string }>;
       const targetId = customEvent.detail?.toolId;
       if (!targetId) return;
+
+      if (targetId === 'summarize-doc' || targetId === 'translate-doc' || targetId === 'pdf-to-markdown') {
+        const tab: IntelligenceTab =
+          targetId === 'translate-doc' ? 'translate' : targetId === 'pdf-to-markdown' ? 'markdown' : 'summarize';
+        setIntelligenceInitialTab(tab);
+        const customFile = (customEvent.detail as any)?.file;
+        setIntelligenceFile(customFile || stagedPdfFile || null);
+        setIntelligenceModalOpen(true);
+        return;
+      }
 
       // Check if target is a tool in ToolsGrid
       const allTools = SECTIONS_DATA.flatMap((s) => s.tools);
@@ -604,6 +811,9 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
       const urlParams = new URLSearchParams(window.location.search);
       const paramTool = urlParams.get('tool');
       if (paramTool) {
+        // Clean the URL query immediately so refreshing the browser does NOT keep reopening the modal
+        window.history.replaceState(null, '', window.location.pathname);
+
         const allTools = SECTIONS_DATA.flatMap((s) => s.tools);
         const foundTool = allTools.find((t) => t.id === paramTool || (paramTool === 'watermark-pdf' && t.id === 'add-watermark'));
         if (foundTool) {
@@ -639,7 +849,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         e.target.value = '';
         return;
       }
-      const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages' || activeModalTool?.id === 'images-to-pdf';
+      const isMultiple =
+        activeModalTool?.id === 'merge-pdf' ||
+        activeModalTool?.id === 'insert-pages' ||
+        activeModalTool?.id === 'images-to-pdf' ||
+        activeModalTool?.id === 'scan-to-pdf' ||
+        activeModalTool?.id === 'compare-pdf';
       setModalFiles(isMultiple ? files : [files[0]]);
       setErrorMessage(null);
 
@@ -671,7 +886,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         onOpenEditor(files[0]);
         return;
       }
-      const isMultiple = activeModalTool?.id === 'merge-pdf' || activeModalTool?.id === 'insert-pages' || activeModalTool?.id === 'images-to-pdf';
+      const isMultiple =
+        activeModalTool?.id === 'merge-pdf' ||
+        activeModalTool?.id === 'insert-pages' ||
+        activeModalTool?.id === 'images-to-pdf' ||
+        activeModalTool?.id === 'scan-to-pdf' ||
+        activeModalTool?.id === 'compare-pdf';
       setModalFiles(isMultiple ? files : [files[0]]);
       setErrorMessage(null);
 
@@ -732,8 +952,8 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
 
   const executeToolOperation = async () => {
     if (!activeModalTool) return;
-    if (modalFiles.length === 0 && activeModalTool.id !== 'fill-sign') {
-      setErrorMessage('Please select a PDF document first.');
+    if (modalFiles.length === 0 && activeModalTool.id !== 'fill-sign' && activeModalTool.id !== 'html-to-pdf') {
+      setErrorMessage('Please select a file first.');
       return;
     }
 
@@ -994,6 +1214,77 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           break;
         }
 
+        case 'scan-to-pdf': {
+          if (modalFiles.length === 0) {
+            throw new Error('Please select at least one image or snapshot to scan into PDF.');
+          }
+          resultBlob = await pdfApiClient.scanToPdf(modalFiles);
+          filename = 'scanned_document.pdf';
+          break;
+        }
+
+        case 'ocr-pdf': {
+          resultBlob = await pdfApiClient.ocrPdf(primaryFile, ocrLang, true);
+          filename = `${stem}_searchable.pdf`;
+          break;
+        }
+
+        case 'html-to-pdf': {
+          if (!htmlInput.trim() && !webUrlInput.trim() && modalFiles.length === 0) {
+            throw new Error('Please provide HTML markup or a valid webpage URL.');
+          }
+          let contentToConvert = htmlInput;
+          if (modalFiles.length > 0) {
+            contentToConvert = await modalFiles[0].text();
+          }
+          resultBlob = await pdfApiClient.htmlToPdf(
+            contentToConvert.trim() || undefined,
+            webUrlInput.trim() || undefined
+          );
+          filename = 'webpage_converted.pdf';
+          break;
+        }
+
+        case 'pdf-to-pdfa': {
+          resultBlob = await pdfApiClient.toPdfa(primaryFile, pdfaConformance);
+          filename = `${stem}_pdfa.pdf`;
+          break;
+        }
+
+        case 'pdf-forms': {
+          resultBlob = await pdfApiClient.pdfForms(primaryFile, undefined, true, true);
+          filename = `${stem}_flattened.pdf`;
+          break;
+        }
+
+        case 'unlock-pdf': {
+          if (!unlockPassword.trim()) {
+            throw new Error('Please enter the decryption password for this PDF.');
+          }
+          resultBlob = await pdfApiClient.unlockPdf(primaryFile, unlockPassword.trim());
+          filename = `${stem}_unlocked.pdf`;
+          break;
+        }
+
+        case 'redact-pdf': {
+          const terms = redactTerms.split(',').map((t) => t.trim()).filter(Boolean);
+          if (terms.length === 0) {
+            throw new Error('Please enter at least one word or phrase to redact.');
+          }
+          resultBlob = await pdfApiClient.redactPdf(primaryFile, terms);
+          filename = `${stem}_redacted.pdf`;
+          break;
+        }
+
+        case 'compare-pdf': {
+          if (modalFiles.length < 2) {
+            throw new Error('Comparison requires 2 PDF documents. Please upload both files to compare.');
+          }
+          resultBlob = await pdfApiClient.comparePdfs(modalFiles[0], modalFiles[1], true);
+          filename = 'pdf_comparison_report.pdf';
+          break;
+        }
+
         default:
           throw new Error('Tool operation not supported.');
       }
@@ -1034,33 +1325,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
             Creed-Tech Online Tools
           </h3>
           <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px', margin: 0 }}>
-            Adobe Acrobat Online tool suite — frictionless, stateless, zero sign-in required.
+            PDF Online tool suite — frictionless, stateless, zero sign-in required.
           </p>
         </div>
 
-        {/* Search & Category Pills */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', width: '220px' }}>
-            <Search size={15} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '9px' }} />
-            <input
-              type="text"
-              placeholder="Search tools..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '6px 12px 6px 32px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                fontSize: '13px',
-                outline: 'none',
-                backgroundColor: '#ffffff',
-                color: '#0f172a',
-              }}
-            />
-          </div>
-
-          {!categoryFilter && (
+        {/* Category Filter Pills (if no global filter) */}
+        {!categoryFilter && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
               {[
                 { id: 'all', label: 'All Tools' },
@@ -1068,6 +1338,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                 { id: 'sign-protect', label: 'Sign & Protect' },
                 { id: 'convert', label: 'Convert' },
                 { id: 'compress', label: 'Reduce file size' },
+                { id: 'intelligence', label: 'Document Intelligence' },
               ].map((cat) => (
                 <button
                   key={cat.id}
@@ -1091,9 +1362,8 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                   {cat.label}
                 </button>
               ))}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Render Structured Adobe-Style Sections */}
@@ -1333,7 +1603,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     {activeModalTool.title}
                   </h3>
                   <p style={{ fontSize: '12px', color: '#64748b', margin: 0, marginTop: '2px' }}>
-                    Creed-Tech Adobe Acrobat Online Workspace
+                    Creed-Tech PDF Online Workspace
                   </p>
                 </div>
               </div>
@@ -1398,8 +1668,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '3px' }}>
                       {activeModalTool.id === 'merge-pdf' || activeModalTool.id === 'insert-pages'
                         ? 'Choose 2 or more PDFs to combine'
-                        : activeModalTool.id === 'images-to-pdf'
-                        ? 'Choose images to combine into PDF'
+                        : activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'scan-to-pdf'
+                        ? 'Choose images or photos to combine into PDF'
+                        : activeModalTool.id === 'compare-pdf'
+                        ? 'Choose 2 PDF documents to compare'
+                        : activeModalTool.id === 'html-to-pdf'
+                        ? 'Choose an HTML file or enter text below'
                         : activeModalTool.id.includes('video')
                         ? 'Choose a video file or drag & drop here'
                         : activeModalTool.id.includes('audio')
@@ -1418,7 +1692,9 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                       multiple={
                         activeModalTool.id === 'merge-pdf' ||
                         activeModalTool.id === 'insert-pages' ||
-                        activeModalTool.id === 'images-to-pdf'
+                        activeModalTool.id === 'images-to-pdf' ||
+                        activeModalTool.id === 'scan-to-pdf' ||
+                        activeModalTool.id === 'compare-pdf'
                       }
                       onChange={handleFileInputChange}
                       style={{ display: 'none' }}
@@ -1925,6 +2201,215 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                 </div>
               )}
 
+              {/* 10. Unlock PDF Password */}
+              {activeModalTool.id === 'unlock-pdf' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                    Document Password
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter decryption password..."
+                      value={unlockPassword}
+                      onChange={(e) => setUnlockPassword(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 40px 10px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '13px',
+                        outline: 'none',
+                        color: '#0f172a',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#64748b', marginTop: '6px', margin: 0 }}>
+                    Enter the owner or user password to permanently strip encryption restrictions.
+                  </p>
+                </div>
+              )}
+
+              {/* 11. Redact PDF Terms */}
+              {activeModalTool.id === 'redact-pdf' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                    Search Terms to Mask (Comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Confidential, Secret, SSN, Internal"
+                    value={redactTerms}
+                    onChange={(e) => setRedactTerms(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      outline: 'none',
+                      color: '#0f172a',
+                    }}
+                  />
+                  <p style={{ fontSize: '11px', color: '#64748b', marginTop: '6px', margin: 0 }}>
+                    All occurrences will be permanently excised and masked with solid black rectangles.
+                  </p>
+                </div>
+              )}
+
+              {/* 12. HTML to PDF Input */}
+              {activeModalTool.id === 'html-to-pdf' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                    Webpage URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com"
+                    value={webUrlInput}
+                    onChange={(e) => setWebUrlInput(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      outline: 'none',
+                      color: '#0f172a',
+                      marginBottom: '12px',
+                    }}
+                  />
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                    Or Raw HTML Code Snippet
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={htmlInput}
+                    onChange={(e) => setHtmlInput(e.target.value)}
+                    placeholder="<h1>Title</h1><p>Content...</p>"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '12px',
+                      fontFamily: 'monospace',
+                      outline: 'none',
+                      color: '#0f172a',
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* 13. PDF/A Conformance Standard */}
+              {activeModalTool.id === 'pdf-to-pdfa' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                    ISO 19005 Conformance Level
+                  </label>
+                  <select
+                    value={pdfaConformance}
+                    onChange={(e) => setPdfaConformance(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    <option value="PDF/A-1b">PDF/A-1b (Basic Visual Conformance - Standard)</option>
+                    <option value="PDF/A-2b">PDF/A-2b (JPEG2000, Transparency & Layers)</option>
+                    <option value="PDF/A-3b">PDF/A-3b (Embedded External Attachments)</option>
+                  </select>
+                </div>
+              )}
+
+              {/* 14. OCR PDF Language */}
+              {activeModalTool.id === 'ocr-pdf' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                    OCR Recognition Language
+                  </label>
+                  <select
+                    value={ocrLang}
+                    onChange={(e) => setOcrLang(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    <option value="eng">English (Latin OCR)</option>
+                    <option value="spa">Spanish (Español)</option>
+                    <option value="fra">French (Français)</option>
+                    <option value="deu">German (Deutsch)</option>
+                    <option value="chi_sim">Chinese Simplified (简体中文)</option>
+                    <option value="ara">Arabic (العربية)</option>
+                    <option value="urd">Urdu (اردو)</option>
+                  </select>
+                  <p style={{ fontSize: '11px', color: '#64748b', marginTop: '6px', margin: 0 }}>
+                    Generates a high-fidelity searchable invisible text overlay across scanned pages.
+                  </p>
+                </div>
+              )}
+
+              {/* 15. PDF Forms Notice */}
+              {activeModalTool.id === 'pdf-forms' && (
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  marginBottom: '20px',
+                  fontSize: '12px',
+                  color: '#1e40af',
+                }}>
+                  <strong>AcroForm Field Processing:</strong> Detects all form text boxes, checkboxes, and radio buttons, and flattens them into permanent read-only document presentation.
+                </div>
+              )}
+
+              {/* 16. Compare PDF Notice */}
+              {activeModalTool.id === 'compare-pdf' && (
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: '#faf5ff',
+                  border: '1px solid #e9d5ff',
+                  marginBottom: '20px',
+                  fontSize: '12px',
+                  color: '#6b21a8',
+                }}>
+                  <strong>Visual & Text Diff Analysis:</strong> Upload 2 PDF documents. Our diff engine computes line-by-line additions and deletions and outputs a detailed annotated report.
+                </div>
+              )}
+
               {/* Progress & Status Indicator */}
               {isProcessing && (
                 <div style={{ marginTop: '16px', marginBottom: '20px' }}>
@@ -2020,7 +2505,12 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                   <button
                     type="button"
                     onClick={executeToolOperation}
-                    disabled={isProcessing || (modalFiles.length === 0 && activeModalTool.id !== 'fill-sign')}
+                    disabled={
+                      isProcessing ||
+                      (modalFiles.length === 0 &&
+                        activeModalTool.id !== 'fill-sign' &&
+                        activeModalTool.id !== 'html-to-pdf')
+                    }
                     className="btn btn-primary"
                     style={{
                       padding: '9px 22px',
@@ -2029,8 +2519,20 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                       backgroundColor: activeModalTool.buttonLabel === 'Protect' ? '#e11d48' : '#0f172a',
                       color: '#ffffff',
                       border: 'none',
-                      opacity: isProcessing || (modalFiles.length === 0 && activeModalTool.id !== 'fill-sign') ? 0.6 : 1,
-                      cursor: isProcessing || (modalFiles.length === 0 && activeModalTool.id !== 'fill-sign') ? 'not-allowed' : 'pointer',
+                      opacity:
+                        isProcessing ||
+                        (modalFiles.length === 0 &&
+                          activeModalTool.id !== 'fill-sign' &&
+                          activeModalTool.id !== 'html-to-pdf')
+                          ? 0.6
+                          : 1,
+                      cursor:
+                        isProcessing ||
+                        (modalFiles.length === 0 &&
+                          activeModalTool.id !== 'fill-sign' &&
+                          activeModalTool.id !== 'html-to-pdf')
+                          ? 'not-allowed'
+                          : 'pointer',
                     }}
                   >
                     {isProcessing ? (
@@ -2041,7 +2543,25 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     ) : (
                       <>
                         <Sparkles size={16} />
-                        {activeModalTool.buttonLabel === 'Protect' ? 'Protect Document' : `Apply ${activeModalTool.title}`}
+                        {activeModalTool.id === 'unlock-pdf'
+                          ? 'Unlock PDF'
+                          : activeModalTool.id === 'redact-pdf'
+                          ? 'Redact PDF'
+                          : activeModalTool.id === 'ocr-pdf'
+                          ? 'Extract Text & OCR'
+                          : activeModalTool.id === 'html-to-pdf'
+                          ? 'Convert HTML to PDF'
+                          : activeModalTool.id === 'pdf-to-pdfa'
+                          ? 'Convert to PDF/A'
+                          : activeModalTool.id === 'pdf-forms'
+                          ? 'Flatten PDF Form'
+                          : activeModalTool.id === 'compare-pdf'
+                          ? 'Compare Documents'
+                          : activeModalTool.id === 'scan-to-pdf'
+                          ? 'Create Scanned PDF'
+                          : activeModalTool.buttonLabel === 'Protect'
+                          ? 'Protect Document'
+                          : `Apply ${activeModalTool.title}`}
                       </>
                     )}
                   </button>
@@ -2051,6 +2571,19 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           </div>
         </div>
       )}
+
+      {/* Document Intelligence Modal */}
+      <DocumentIntelligenceModal
+        isOpen={intelligenceModalOpen}
+        initialTab={intelligenceInitialTab}
+        initialFile={intelligenceFile || stagedPdfFile}
+        onClose={() => {
+          setIntelligenceModalOpen(false);
+          if (typeof window !== 'undefined' && window.location.search) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }}
+      />
     </section>
   );
 };
