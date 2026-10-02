@@ -14,6 +14,7 @@ from backend.app.api.routes_compress import router as compress_router
 from backend.app.api.routes_converters import router as converters_router
 from backend.app.api.routes_contact import router as contact_router
 from backend.app.api.routes_intelligence import router as intelligence_router
+from backend.app.core.database import init_db
 from backend.app.core.config import settings
 from backend.app.core.sandbox import sandbox_manager
 
@@ -28,6 +29,7 @@ logger = logging.getLogger("creedtech.main")
 async def lifespan(app: FastAPI):
     """Manages background threads across application lifecycle."""
     logger.info("Initializing Creed-Tech Studio backend...")
+    init_db()
     sandbox_manager.start_reaper()
     yield
     logger.info("Shutting down Creed-Tech Studio backend...")

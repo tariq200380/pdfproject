@@ -41,6 +41,10 @@ export type ToolActionId =
   | 'request-signatures'
   | 'protect-pdf'
   | 'add-watermark'
+  | 'remove-watermark'
+  | 'remove-watermark-pdf'
+  | 'remove-watermark-video'
+  | 'remove-watermark-image'
   | 'images-to-pdf'
   | 'pdf-to-images'
   | 'pdf-to-svg'
@@ -330,6 +334,60 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ menuType, onSelectTool, onCl
                 </div>
               </div>
             </button>
+
+            <button
+              onClick={() => handleItemClick('remove-watermark-video')}
+              className="adobe-mega-item"
+            >
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#ede9fe',
+                color: '#7c3aed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Video size={18} />
+              </div>
+              <div>
+                <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                  Remove Video Watermark
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  TikTok, Reels, Shorts (16:9 & 9:16)
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleItemClick('remove-watermark-image')}
+              className="adobe-mega-item"
+            >
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: '#ecfdf5',
+                color: '#059669',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <ImageIcon size={18} />
+              </div>
+              <div>
+                <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                  Remove Image Watermark
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  JPG, PNG, WebP AI inpainting
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -601,6 +659,34 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ menuType, onSelectTool, onCl
               </div>
               <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                 Encrypt with AES-256 password
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleItemClick('remove-watermark-pdf')}
+            className="adobe-mega-item"
+          >
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              backgroundColor: '#e0f2fe',
+              border: '1px solid #bae6fd',
+              color: '#0284c7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <EyeOff size={18} />
+            </div>
+            <div>
+              <div className="item-title" style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                Remove PDF Watermark
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                PDF, Word, Excel & PowerPoint
               </div>
             </div>
           </button>

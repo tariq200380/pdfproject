@@ -30,6 +30,7 @@ from backend.app.core.sandbox import sandbox_manager
 from backend.app.core.sanitizer import sanitize_filename
 from backend.app.services.pdf_engine import pdf_engine
 from backend.app.services.pdf_operations import pdf_operations
+from backend.app.services.watermark_remover import watermark_remover
 
 logger = logging.getLogger("omnistudio.routes_pdf_tools")
 router = APIRouter(prefix="/pdf", tags=["PDF Advanced Tools"])
@@ -463,3 +464,89 @@ async def compare_pdf_endpoint(
 
     sandbox_manager.cleanup_session(session_id)
     return JSONResponse(status_code=status.HTTP_200_OK, content=result)
+
+
+@router.post("/remove-watermark")
+async def remove_watermark_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    watermark_text: Optional[str] = Form(None),
+    position: Optional[str] = Form("bottom-right"),
+    preset: Optional[str] = Form(None),
+    aspect_ratio: Optional[str] = Form("auto"),
+):
+    """Removes watermarks from Videos, Images, PDF, Word, Excel, and PowerPoint files.
+    
+    Supports:
+    - Videos (.mp4, .mov, .mkv, .webm, .avi): High-fidelity CRF 17-18 reconstruction,
+      bit-for-bit lossless audio (-c:a copy), and TikTok, Instagram, YouTube Shorts,
+      Facebook, Snapchat, WhatsApp presets across 16:9 and 9:16 aspect ratios.
+    - Images (.png, .jpg, .jpeg, .webp, .bmp): Q99 inpainting via OpenCV Telea.
+    - PDF (.pdf): Annotations, XObjects, and text redaction.
+    - Office (.docx, .xlsx, .pptx): VML shapes, background pictures, and master layouts.
+    """
+    content = await file.read()
+    if not content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is empty.",
+        )
+
+    safe_name = sanitize_filename(file.filename or "document.pdf")
+    suffix = Path(safe_name).suffix.lower()
+    allowed_suffixes = {
+        ".pdf": "application/pdf",
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".doc": "application/msword",
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".xls": "application/vnd.ms-excel",
+        ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ".ppt": "application/vnd.ms-powerpoint",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".bmp": "image/bmp",
+        ".mp4": "video/mp4",
+        ".mov": "video/quicktime",
+        ".mkv": "video/x-matroska",
+        ".webm": "video/webm",
+        ".avi": "video/x-msvideo",
+    }
+
+    if suffix not in allowed_suffixes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported format '{suffix}'. Supported formats: Video (MP4, MOV, MKV, WEBM), Images (JPG, PNG, WEBP), PDF, Word, Excel, PowerPoint.",
+        )
+
+    session_id, session_dir = sandbox_manager.create_session()
+    in_path = session_dir / f"input{suffix}"
+    out_path = session_dir / f"cleaned{suffix}"
+    in_path.write_bytes(content)
+
+    try:
+        watermark_remover.process_file(
+            input_path=in_path,
+            output_path=out_path,
+            watermark_text=watermark_text,
+            position=position or "bottom-right",
+            preset=preset,
+            aspect_ratio=aspect_ratio or "auto",
+        )
+    except Exception as e:
+        logger.error(f"Watermark removal failed: {e}")
+        sandbox_manager.cleanup_session(session_id)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"success": False, "detail": f"Watermark removal failed: {str(e)}"},
+        )
+
+    background_tasks.add_task(sandbox_manager.cleanup_session, session_id)
+    stem = Path(safe_name).stem
+    media_type = allowed_suffixes.get(suffix, "application/octet-stream")
+    return FileResponse(
+        path=out_path,
+        filename=f"{stem}_nowatermark{suffix}",
+        media_type=media_type,
+    )

@@ -444,6 +444,34 @@ export const Header: React.FC = () => {
 
                   <button
                     type="button"
+                    onClick={() => handleToolClick('remove-watermark-video')}
+                    className="adobe-mega-item"
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Video size={17} />
+                    </div>
+                    <div>
+                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Remove Video Watermark</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>TikTok, Reels, Shorts (16:9 & 9:16)</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToolClick('remove-watermark-image')}
+                    className="adobe-mega-item"
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <ImageIcon size={17} />
+                    </div>
+                    <div>
+                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Remove Image Watermark</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>JPG, PNG, WebP AI inpainting</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => handleToolClick('compress-pdf')}
                     className="adobe-mega-item"
                   >
@@ -742,6 +770,20 @@ export const Header: React.FC = () => {
                   <div>
                     <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Add Watermark</div>
                     <div style={{ fontSize: '11px', color: '#64748b' }}>Stamp text watermark overlays</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolClick('remove-watermark-pdf')}
+                  className="adobe-mega-item"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <EyeOff size={17} />
+                  </div>
+                  <div>
+                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Remove PDF Watermark</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>PDF, Word, Excel & PowerPoint</div>
                   </div>
                 </button>
 

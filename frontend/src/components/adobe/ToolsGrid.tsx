@@ -266,6 +266,18 @@ const SECTIONS_DATA: {
         badge: 'Overlay',
       },
       {
+        id: 'remove-watermark-pdf',
+        title: 'Remove PDF Watermark',
+        description: 'Remove watermarks, background stamps, and draft overlays from PDF, Word (.docx), Excel (.xlsx), and PowerPoint (.pptx).',
+        section: 'sign-protect',
+        buttonLabel: 'Open',
+        icon: <EyeOff size={22} />,
+        iconBg: '#e0f2fe',
+        iconColor: '#0284c7',
+        iconBorder: '#bae6fd',
+        badge: 'PDF / Docs',
+      },
+      {
         id: 'unlock-pdf',
         title: 'Unlock PDF',
         description: 'Decrypt and remove password restrictions with valid credentials.',
@@ -403,6 +415,30 @@ const SECTIONS_DATA: {
         iconColor: '#7c3aed',
         iconBorder: '#e9d5ff',
         badge: 'Archival',
+      },
+      {
+        id: 'remove-watermark-video',
+        title: 'Remove Video Watermark',
+        description: 'Erase TikTok, Reels, Shorts, and social watermarks (16:9 & 9:16) with 100% bit-for-bit lossless audio.',
+        section: 'convert',
+        buttonLabel: 'Open',
+        icon: <Video size={22} />,
+        iconBg: '#ede9fe',
+        iconColor: '#7c3aed',
+        iconBorder: '#ddd6fe',
+        badge: 'Video HD',
+      },
+      {
+        id: 'remove-watermark-image',
+        title: 'Remove Image Watermark',
+        description: 'Smart Telea inpainting watermark removal for JPG, PNG, and WEBP photos with Q99 quality retention.',
+        section: 'convert',
+        buttonLabel: 'Open',
+        icon: <ImageIcon size={22} />,
+        iconBg: '#ecfdf5',
+        iconColor: '#059669',
+        iconBorder: '#a7f3d0',
+        badge: 'Image AI',
       },
     ],
   },
@@ -561,6 +597,9 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const [recipientEmail, setRecipientEmail] = useState('');
   const [targetFormat, setTargetFormat] = useState<string>('mp3');
   const [watermarkText, setWatermarkText] = useState('CONFIDENTIAL');
+  const [watermarkPreset, setWatermarkPreset] = useState<string>('tiktok');
+  const [watermarkAspectRatio, setWatermarkAspectRatio] = useState<'auto' | '9:16' | '16:9'>('auto');
+  const [watermarkPosition, setWatermarkPosition] = useState<string>('tiktok-dual');
 
   // Additional New Tools Form Inputs
   const [unlockPassword, setUnlockPassword] = useState('');
@@ -594,6 +633,8 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         toolId === 'request-signatures' ||
         toolId === 'protect-pdf' ||
         toolId === 'add-watermark' ||
+        toolId === 'remove-watermark' ||
+        toolId === 'remove-watermark-pdf' ||
         toolId === 'pdf-to-images' ||
         toolId === 'images-to-pdf' ||
         toolId === 'summarize-doc' ||
@@ -614,7 +655,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         toolId === 'convert-video' ||
         toolId === 'convert-audio' ||
         toolId === 'image-converter' ||
-        toolId === 'video-to-audio'
+        toolId === 'video-to-audio' ||
+        toolId === 'remove-watermark' ||
+        toolId === 'remove-watermark-video' ||
+        toolId === 'remove-watermark-image'
       );
     }
     if (filter === 'compressor') {
@@ -658,20 +702,37 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const validateSelectedFiles = (files: File[], toolId: string): { valid: boolean; error?: string } => {
     if (files.length === 0) return { valid: false, error: 'No file selected.' };
 
-    const isVideoTool = toolId === 'convert-video' || toolId === 'compress-video' || toolId.includes('video');
+    const isVideoWatermark = toolId === 'remove-watermark-video';
+    const isImageWatermark = toolId === 'remove-watermark-image';
+    const isPdfWatermark = toolId === 'remove-watermark-pdf' || toolId === 'remove-watermark';
+
+    const isVideoTool = isVideoWatermark || toolId === 'convert-video' || toolId === 'compress-video' || toolId.includes('video');
     const isAudioTool = toolId === 'convert-audio' || toolId === 'compress-audio' || toolId.includes('audio');
-    const isImageTool = toolId === 'images-to-pdf' || toolId === 'compress-image' || toolId === 'scan-to-pdf' || toolId.includes('image');
+    const isImageTool = isImageWatermark || toolId === 'images-to-pdf' || toolId === 'compress-image' || toolId === 'scan-to-pdf' || toolId.includes('image');
     const isHtmlTool = toolId === 'html-to-pdf';
-    const isPdfTool = !isVideoTool && !isAudioTool && !isImageTool && !isHtmlTool && toolId !== 'universal-converter';
+    const isPdfTool = !isVideoTool && !isAudioTool && !isImageTool && !isHtmlTool && !isPdfWatermark && toolId !== 'universal-converter';
 
     const videoExts = new Set(['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', 'm4v', '3gp', 'ts', 'ogv', 'gif', 'mp3']);
     const audioExts = new Set(['mp3', 'wav', 'aac', 'flac', 'ogg', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'mp4', 'mkv', 'webm', 'mov']);
     const imageExts = new Set(['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'bmp', 'tiff', 'tif', 'gif', 'svg']);
     const htmlExts = new Set(['html', 'htm', 'txt']);
+    const pdfDocExts = new Set(['pdf', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt']);
 
     for (const f of files) {
       const ext = f.name.split('.').pop()?.toLowerCase() || '';
-      if (isVideoTool) {
+      if (isVideoWatermark) {
+        if (!f.type.startsWith('video/') && !videoExts.has(ext)) {
+          return { valid: false, error: 'Please select a valid video file (.mp4, .mov, .mkv, .webm).' };
+        }
+      } else if (isImageWatermark) {
+        if (!f.type.startsWith('image/') && !imageExts.has(ext)) {
+          return { valid: false, error: 'Please select a valid image file (.jpg, .png, .webp, .bmp).' };
+        }
+      } else if (isPdfWatermark) {
+        if (!pdfDocExts.has(ext)) {
+          return { valid: false, error: 'Please select a supported document (.pdf, .docx, .xlsx, .pptx).' };
+        }
+      } else if (isVideoTool) {
         if (!f.type.startsWith('video/') && !videoExts.has(ext) && f.type !== '') {
           return { valid: false, error: `Please select a valid video file (.mp4, .mkv, .avi, etc.).` };
         }
@@ -698,6 +759,15 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
 
   const getToolFormatDescription = () => {
     if (!activeModalTool) return 'Supports standard PDF documents (.pdf)';
+    if (activeModalTool.id === 'remove-watermark-pdf' || activeModalTool.id === 'remove-watermark') {
+      return 'Supports PDF documents (.pdf), Word (.docx), Excel (.xlsx), and PowerPoint (.pptx)';
+    }
+    if (activeModalTool.id === 'remove-watermark-video') {
+      return 'Supports 9:16 & 16:9 Videos (MP4, MOV, MKV, WEBM, AVI) with 100% bit-for-bit lossless audio copy';
+    }
+    if (activeModalTool.id === 'remove-watermark-image') {
+      return 'Supports Images (JPG, PNG, WEBP, BMP, TIFF) with Telea AI inpainting and Q99 quality retention';
+    }
     if (activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'compress-image' || activeModalTool.id === 'scan-to-pdf') {
       return 'Supports all image formats (JPG, PNG, WEBP, HEIC, TIFF, BMP, GIF)';
     }
@@ -735,7 +805,15 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
 
     // Open focused interactive modal in-place for all tools without jumping or tab-switching
     setActiveModalTool(tool);
-    setModalFiles(stagedPdfFile && tool.section !== 'convert' ? [stagedPdfFile] : []);
+    setModalFiles(
+      stagedPdfFile &&
+      tool.section !== 'convert' &&
+      tool.id !== 'remove-watermark' &&
+      tool.id !== 'remove-watermark-video' &&
+      tool.id !== 'remove-watermark-image'
+        ? [stagedPdfFile]
+        : []
+    );
     setIsProcessing(false);
     setProgress(0);
     setProgressStage('idle');
@@ -792,8 +870,8 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
       let foundTool = allTools.find((t) => t.id === targetId);
 
       // Map alias IDs if needed
-      if (!foundTool && targetId === 'watermark-pdf') {
-        foundTool = allTools.find((t) => t.id === 'add-watermark');
+      if (!foundTool && (targetId === 'watermark-pdf' || targetId === 'remove-watermark')) {
+        foundTool = allTools.find((t) => t.id === 'remove-watermark-pdf' || t.id === 'add-watermark');
       }
 
       if (foundTool) {
@@ -1007,6 +1085,20 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
           const text = watermarkText.trim() || 'CONFIDENTIAL';
           resultBlob = await pdfApiClient.numberPages(primaryFile, text);
           filename = `${stem}_watermarked.pdf`;
+          break;
+        }
+
+        case 'remove-watermark':
+        case 'remove-watermark-pdf':
+        case 'remove-watermark-video':
+        case 'remove-watermark-image': {
+          const suffix = primaryFile.name.includes('.') ? `.${primaryFile.name.split('.').pop()}` : '.pdf';
+          resultBlob = await pdfApiClient.removeWatermark(primaryFile, watermarkText.trim() || undefined, {
+            position: watermarkPosition,
+            preset: watermarkPreset,
+            aspectRatio: watermarkAspectRatio,
+          });
+          filename = `${stem}_nowatermark${suffix}`;
           break;
         }
 
@@ -1666,7 +1758,13 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     </div>
 
                     <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '3px' }}>
-                      {activeModalTool.id === 'merge-pdf' || activeModalTool.id === 'insert-pages'
+                      {activeModalTool.id === 'remove-watermark-pdf' || activeModalTool.id === 'remove-watermark'
+                        ? 'Choose a PDF, Word, Excel, or PowerPoint document or drag & drop here'
+                        : activeModalTool.id === 'remove-watermark-video'
+                        ? 'Choose a video file (.mp4, .mov, .mkv, .webm) or drag & drop here'
+                        : activeModalTool.id === 'remove-watermark-image'
+                        ? 'Choose an image file (.jpg, .png, .webp) or drag & drop here'
+                        : activeModalTool.id === 'merge-pdf' || activeModalTool.id === 'insert-pages'
                         ? 'Choose 2 or more PDFs to combine'
                         : activeModalTool.id === 'images-to-pdf' || activeModalTool.id === 'scan-to-pdf'
                         ? 'Choose images or photos to combine into PDF'
@@ -1689,6 +1787,17 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     <input
                       ref={fileInputRef}
                       type="file"
+                      accept={
+                        activeModalTool.id === 'remove-watermark-pdf'
+                          ? '.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt'
+                          : activeModalTool.id === 'remove-watermark-video'
+                          ? 'video/*,.mp4,.mov,.mkv,.webm,.avi,.flv,.wmv'
+                          : activeModalTool.id === 'remove-watermark-image'
+                          ? 'image/*,.png,.jpg,.jpeg,.webp,.bmp,.tiff'
+                          : activeModalTool.id === 'remove-watermark'
+                          ? '.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.webp,.mp4,.mov,.mkv,.webm,.avi,video/*,image/*'
+                          : undefined
+                      }
                       multiple={
                         activeModalTool.id === 'merge-pdf' ||
                         activeModalTool.id === 'insert-pages' ||
@@ -1724,7 +1833,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                         </div>
                         <div>
                           <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', wordBreak: 'break-all' }}>
-                            {modalFiles.length === 1 ? modalFiles[0].name : `${modalFiles.length} PDF files selected`}
+                            {modalFiles.length === 1 ? modalFiles[0].name : `${modalFiles.length} files selected`}
                           </div>
                           <div style={{ fontSize: '11px', color: '#64748b' }}>
                             {(modalFiles.reduce((acc, f) => acc + f.size, 0) / 1024).toFixed(1)} KB total
@@ -2118,6 +2227,200 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                   <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
                     This text will be stamped across all pages of your PDF document.
                   </span>
+                </div>
+              )}
+
+              {/* Remove PDF / Office Watermark Options */}
+              {(activeModalTool.id === 'remove-watermark-pdf' || activeModalTool.id === 'remove-watermark') && (
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '4px' }}>
+                      Document Watermark Text or Keyword (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. CONFIDENTIAL, DRAFT, SAMPLE (Leave blank to auto-detect & strip stamps)"
+                      value={watermarkText}
+                      onChange={(e) => setWatermarkText(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '12px',
+                        outline: 'none',
+                        color: '#0f172a',
+                        backgroundColor: '#ffffff',
+                      }}
+                    />
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                      Leave blank to automatically strip background watermark layers, diagonal stamps, and draft overlays.
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '12px 14px', borderRadius: '8px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                    <span style={{ fontSize: '12px', color: '#166534', display: 'block', fontWeight: 700, marginBottom: '3px' }}>
+                      📄 Full Office & PDF Document Protection
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#15803d', display: 'block', lineHeight: 1.5 }}>
+                      • <strong>Supported Formats:</strong> Adobe PDF (.pdf), Microsoft Word (.docx), Excel (.xlsx), and PowerPoint (.pptx).<br />
+                      • <strong>Zero Distortion:</strong> Text styling, tables, vector charts, and fonts remain 100% intact.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Remove Video Watermark Options */}
+              {activeModalTool.id === 'remove-watermark-video' && (
+                <div style={{ marginBottom: '20px' }}>
+                  {/* Aspect Ratio Selection (16:9 vs 9:16) */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                      Video Aspect Ratio (Canvas Size)
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                      {[
+                        { id: 'auto', label: '⚡ Auto Detect', desc: 'Preserves original dimensions' },
+                        { id: '9:16', label: '📱 9:16 Vertical', desc: 'TikTok, Reels, Shorts' },
+                        { id: '16:9', label: '🖥️ 16:9 Widescreen', desc: 'YouTube, Facebook' },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setWatermarkAspectRatio(item.id as any)}
+                          style={{
+                            padding: '10px 8px',
+                            borderRadius: '8px',
+                            border: `1px solid ${watermarkAspectRatio === item.id ? '#7c3aed' : '#cbd5e1'}`,
+                            backgroundColor: watermarkAspectRatio === item.id ? '#f5f3ff' : '#ffffff',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <div style={{ fontSize: '12px', fontWeight: 700, color: watermarkAspectRatio === item.id ? '#6d28d9' : '#0f172a' }}>
+                            {item.label}
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
+                            {item.desc}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Social Platform Watermark Presets */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                      Platform Watermark Position Preset
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                      {[
+                        { id: 'tiktok', pos: 'tiktok-dual', label: '🎵 TikTok', sub: 'Dual Alternating' },
+                        { id: 'instagram', pos: 'bottom-right', label: '📸 Instagram', sub: 'Reels / Post' },
+                        { id: 'youtube', pos: 'bottom-right', label: '▶️ YouTube', sub: 'Shorts / Video' },
+                        { id: 'facebook', pos: 'bottom-right', label: '📘 Facebook', sub: 'Reels / Watch' },
+                        { id: 'snapchat', pos: 'top-right', label: '👻 Snapchat', sub: 'Top-Right' },
+                        { id: 'whatsapp', pos: 'bottom-right', label: '💬 WhatsApp', sub: 'Status Logo' },
+                        { id: 'bottom-left', pos: 'bottom-left', label: '↙️ Bottom-Left', sub: 'Single Logo' },
+                        { id: 'all-corners', pos: 'all-corners', label: '🔲 All Corners', sub: '4 Corner Clean' },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setWatermarkPreset(item.id);
+                            setWatermarkPosition(item.pos);
+                          }}
+                          style={{
+                            padding: '8px 6px',
+                            borderRadius: '6px',
+                            border: `1px solid ${watermarkPreset === item.id ? '#7c3aed' : '#e2e8f0'}`,
+                            backgroundColor: watermarkPreset === item.id ? '#f5f3ff' : '#f8fafc',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.12s ease',
+                          }}
+                        >
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: watermarkPreset === item.id ? '#6d28d9' : '#1e293b' }}>
+                            {item.label}
+                          </div>
+                          <div style={{ fontSize: '9px', color: '#64748b', marginTop: '1px' }}>
+                            {item.sub}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Lossless Quality Guarantee Banner */}
+                  <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                    <span style={{ fontSize: '12px', color: '#166534', display: 'block', fontWeight: 700 }}>
+                      ✨ Zero Quality Loss Video Processing
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#15803d', marginTop: '2px', display: 'block', lineHeight: 1.4 }}>
+                      • <strong>Bit-for-Bit Lossless Audio:</strong> Original audio stream copied bit-for-bit (<code>-c:a copy</code>, 0% re-encoding loss).<br />
+                      • <strong>Visually Lossless Video:</strong> High-precision FFmpeg delogo filter (CRF 17) preserves original 1080p/4K resolution.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Remove Image Watermark Options */}
+              {activeModalTool.id === 'remove-watermark-image' && (
+                <div style={{ marginBottom: '20px' }}>
+                  {/* Image Watermark Corner Presets */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                      Watermark / Logo Position on Image
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                      {[
+                        { id: 'bottom-right', pos: 'bottom-right', label: '↘️ Bottom-Right', sub: 'Standard Logo' },
+                        { id: 'bottom-left', pos: 'bottom-left', label: '↙️ Bottom-Left', sub: 'Camera Stamp' },
+                        { id: 'top-right', pos: 'top-right', label: '↗️ Top-Right', sub: 'Corner Badge' },
+                        { id: 'top-left', pos: 'top-left', label: '↖️ Top-Left', sub: 'Date / Tag' },
+                        { id: 'tiktok', pos: 'tiktok-dual', label: '🎵 Social Dual', sub: 'Dual Corners' },
+                        { id: 'all-corners', pos: 'all-corners', label: '🔲 All Corners', sub: '4 Corner Clean' },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setWatermarkPreset(item.id);
+                            setWatermarkPosition(item.pos);
+                          }}
+                          style={{
+                            padding: '8px 6px',
+                            borderRadius: '6px',
+                            border: `1px solid ${watermarkPreset === item.id ? '#059669' : '#e2e8f0'}`,
+                            backgroundColor: watermarkPreset === item.id ? '#ecfdf5' : '#f8fafc',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.12s ease',
+                          }}
+                        >
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: watermarkPreset === item.id ? '#047857' : '#1e293b' }}>
+                            {item.label}
+                          </div>
+                          <div style={{ fontSize: '9px', color: '#64748b', marginTop: '1px' }}>
+                            {item.sub}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Image Quality Guarantee Banner */}
+                  <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                    <span style={{ fontSize: '12px', color: '#166534', display: 'block', fontWeight: 700 }}>
+                      ✨ Telea AI Inpainting (Q99 High-Resolution Quality)
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#15803d', marginTop: '2px', display: 'block', lineHeight: 1.4 }}>
+                      • <strong>Zero Quality Loss:</strong> WebP, PNG, and JPG images saved with maximum Q99 retention and no compression artifacts.<br />
+                      • <strong>Smart Texture Inpainting:</strong> Synthesizes surrounding pixels seamlessly to restore authentic background texture.
+                    </span>
+                  </div>
                 </div>
               )}
 

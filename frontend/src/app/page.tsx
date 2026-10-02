@@ -164,7 +164,9 @@ export default function StudioHomePage() {
       toolId === 'fill-sign' ||
       toolId === 'request-signatures' ||
       toolId === 'protect-pdf' ||
-      toolId === 'add-watermark'
+      toolId === 'add-watermark' ||
+      toolId === 'remove-watermark' ||
+      toolId === 'remove-watermark-pdf'
     ) {
       setActiveCategory('pdf');
       setTimeout(() => {
@@ -183,14 +185,16 @@ export default function StudioHomePage() {
       toolId === 'convert-audio' ||
       toolId === 'convert-video' ||
       toolId === 'image-converter' ||
-      toolId === 'video-to-audio'
+      toolId === 'video-to-audio' ||
+      toolId === 'remove-watermark-video' ||
+      toolId === 'remove-watermark-image'
     ) {
       const candidate = stagedFiles.find((f) => {
         if (toolId === 'images-to-pdf') return f.category === 'image';
         if (toolId === 'pdf-to-images' || toolId === 'pdf-to-svg') return f.category === 'pdf';
         if (toolId === 'convert-audio') return f.category === 'audio';
-        if (toolId === 'convert-video') return f.category === 'video';
-        if (toolId === 'image-converter') return f.category === 'image';
+        if (toolId === 'convert-video' || toolId === 'remove-watermark-video') return f.category === 'video';
+        if (toolId === 'image-converter' || toolId === 'remove-watermark-image') return f.category === 'image';
         if (toolId === 'video-to-audio') return f.category === 'video';
         return false;
       });

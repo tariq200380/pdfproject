@@ -1,56 +1,24 @@
 """Contact message handling and administrative inbox endpoints for Creed-Tech Studio."""
 
-import json
 import uuid
 import logging
-import asyncio
 from datetime import datetime, timezone
-from pathlib import Path
 import re
-from typing import Literal, Optional, List
+from typing import Literal, List
 from pydantic import BaseModel, Field, field_validator
 from fastapi import APIRouter, HTTPException, status
+
+from backend.app.core.database import (
+    insert_contact_message,
+    get_all_contact_messages,
+    update_contact_message_status,
+    delete_contact_message_by_id,
+)
 
 logger = logging.getLogger("creedtech.contact")
 router = APIRouter(tags=["Contact & Admin"])
 
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
-# Resolve file location: backend/data/messages.json
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
-MESSAGES_FILE = DATA_DIR / "messages.json"
-_file_lock = asyncio.Lock()
-
-
-def _ensure_storage_exists():
-    """Ensures data directory and initial JSON storage exist."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    if not MESSAGES_FILE.exists():
-        MESSAGES_FILE.write_text("[]", encoding="utf-8")
-
-
-def _read_messages_sync() -> List[dict]:
-    """Reads all messages from disk."""
-    _ensure_storage_exists()
-    try:
-        content = MESSAGES_FILE.read_text(encoding="utf-8")
-        if not content.strip():
-            return []
-        data = json.loads(content)
-        if isinstance(data, list):
-            return data
-        return []
-    except Exception as e:
-        logger.error(f"Failed to read messages file: {e}")
-        return []
-
-
-def _write_messages_sync(messages: List[dict]):
-    """Writes all messages to disk atomically."""
-    _ensure_storage_exists()
-    temp_file = MESSAGES_FILE.with_suffix(".tmp")
-    temp_file.write_text(json.dumps(messages, indent=2, ensure_ascii=False), encoding="utf-8")
-    temp_file.replace(MESSAGES_FILE)
 
 
 class ContactSubmitRequest(BaseModel):
@@ -91,8 +59,7 @@ class UpdateStatusRequest(BaseModel):
 
 @router.post("/contact/submit", status_code=status.HTTP_201_CREATED)
 async def submit_contact_message(payload: ContactSubmitRequest):
-    """Submits a new customer inquiry, validates, sanitizes, and stores it."""
-    # Sanitize strings
+    """Submits a new customer inquiry, validates, sanitizes, and stores it in SQLite."""
     cleaned_name = payload.name.strip().replace("\x00", "")
     cleaned_subject = payload.subject.strip().replace("\x00", "")
     cleaned_message = payload.message.strip().replace("\x00", "")
@@ -109,12 +76,16 @@ async def submit_contact_message(payload: ContactSubmitRequest):
         "status": "unread",
     }
 
-    async with _file_lock:
-        messages = _read_messages_sync()
-        messages.append(new_entry)
-        _write_messages_sync(messages)
+    try:
+        insert_contact_message(new_entry)
+    except Exception as e:
+        logger.error(f"Failed to insert contact message into SQLite: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save message. Please try again later."
+        )
 
-    logger.info(f"New contact inquiry received: [{new_entry['id']}] from {cleaned_email} ({payload.category})")
+    logger.info(f"New contact inquiry saved to SQLite: [{new_entry['id']}] from {cleaned_email} ({payload.category})")
 
     return {
         "success": True,
@@ -125,54 +96,40 @@ async def submit_contact_message(payload: ContactSubmitRequest):
 
 @router.get("/admin/messages", response_model=List[MessageItem])
 async def list_admin_messages():
-    """Fetches all stored inquiries, ordered by newest first."""
-    async with _file_lock:
-        messages = _read_messages_sync()
-
-    # Sort descending by creation timestamp
-    messages.sort(key=lambda m: m.get("created_at", ""), reverse=True)
-    return messages
+    """Fetches all stored inquiries from SQLite, ordered by newest first."""
+    try:
+        return get_all_contact_messages(limit=500)
+    except Exception as e:
+        logger.error(f"Failed to fetch contact messages from SQLite: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve messages from database."
+        )
 
 
 @router.patch("/admin/messages/{message_id}", response_model=MessageItem)
 async def update_message_status(message_id: str, payload: UpdateStatusRequest):
-    """Updates status ('unread', 'read', 'replied') of a specific message."""
-    async with _file_lock:
-        messages = _read_messages_sync()
-        target = None
-        for m in messages:
-            if m.get("id") == message_id:
-                m["status"] = payload.status
-                target = m
-                break
+    """Updates status ('unread', 'read', 'replied') of a specific message in SQLite."""
+    updated = update_contact_message_status(message_id, payload.status)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Message with ID {message_id} not found."
+        )
 
-        if not target:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Message with ID {message_id} not found."
-            )
-
-        _write_messages_sync(messages)
-
-    logger.info(f"Updated status of message {message_id} to {payload.status}")
-    return target
+    logger.info(f"Updated status of message {message_id} to {payload.status} in SQLite")
+    return updated
 
 
 @router.delete("/admin/messages/{message_id}")
 async def delete_message(message_id: str):
-    """Deletes a message from the storage."""
-    async with _file_lock:
-        messages = _read_messages_sync()
-        initial_len = len(messages)
-        messages = [m for m in messages if m.get("id") != message_id]
+    """Deletes a message from SQLite storage."""
+    deleted = delete_contact_message_by_id(message_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Message with ID {message_id} not found."
+        )
 
-        if len(messages) == initial_len:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Message with ID {message_id} not found."
-            )
-
-        _write_messages_sync(messages)
-
-    logger.info(f"Deleted message {message_id}")
+    logger.info(f"Deleted message {message_id} from SQLite")
     return {"success": True, "detail": f"Message {message_id} successfully deleted."}

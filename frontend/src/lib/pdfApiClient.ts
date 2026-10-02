@@ -423,6 +423,43 @@ class PdfApiClient {
     return res.json();
   }
 
+  async removeWatermark(
+    file: File,
+    watermarkText?: string,
+    options?: {
+      position?: string;
+      preset?: string;
+      aspectRatio?: string;
+    }
+  ): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (watermarkText && watermarkText.trim()) {
+      formData.append('watermark_text', watermarkText.trim());
+    }
+    if (options?.position) {
+      formData.append('position', options.position);
+    }
+    if (options?.preset) {
+      formData.append('preset', options.preset);
+    }
+    if (options?.aspectRatio) {
+      formData.append('aspect_ratio', options.aspectRatio);
+    }
+
+    const res = await fetch(`${this.baseUrl}/remove-watermark`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to remove watermark' }));
+      throw new Error(err.detail || 'Watermark removal failed');
+    }
+
+    return res.blob();
+  }
+
   triggerBrowserDownload(blob: Blob, filename: string): void {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
