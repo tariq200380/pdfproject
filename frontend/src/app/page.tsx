@@ -4,21 +4,35 @@ import React, { useEffect, useState } from 'react';
 import { StagedFile } from '@/lib/types';
 import { detectCategory, indexedDBService } from '@/lib/indexedDbService';
 import { ToolActionId } from '@/components/adobe/MegaMenu';
-import { ToolsGrid } from '@/components/adobe/ToolsGrid';
+import { ToolsGrid, ToolsGridFilter } from '@/components/adobe/ToolsGrid';
 import { AllConvertersGrid } from '@/components/converter/AllConvertersGrid';
 import { AutoRecoveryBanner } from '@/components/AutoRecoveryBanner';
 import { DragDropZone } from '@/components/DragDropZone';
+import { DynamicHeroDropzone } from '@/components/DynamicHeroDropzone';
 import { StagedFileCard } from '@/components/StagedFileCard';
 import { PdfEditorWorkspace } from '@/components/pdf/PdfEditorWorkspace';
-import { Trash2, Sparkles, FolderUp, LayoutGrid } from 'lucide-react';
+import { CompressPdfModal } from '@/components/compressor/CompressPdfModal';
+import {
+  Trash2,
+  Sparkles,
+  FolderUp,
+  LayoutGrid,
+  Layers,
+  FileText,
+  ShieldCheck,
+  TrendingDown,
+  Video,
+} from 'lucide-react';
+import { useHeroTab, HeroTabId } from '@/context/HeroTabContext';
 
 export default function StudioHomePage() {
-  const [activeCategory, setActiveCategory] = useState<'pdf' | 'media' | 'compressor'>('pdf');
+  const { activeTab, selectTab } = useHeroTab();
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [recoverableData, setRecoverableData] = useState<{ files: StagedFile[]; savedAt: number } | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [activeNotice, setActiveNotice] = useState<string | null>(null);
   const [activeEditingPdf, setActiveEditingPdf] = useState<File | null>(null);
+  const [activeCompressPdf, setActiveCompressPdf] = useState<File | null>(null);
   const [preselectedFileId, setPreselectedFileId] = useState<string | undefined>(undefined);
 
   // Check for IndexedDB auto-recovery on mount
@@ -106,16 +120,22 @@ export default function StudioHomePage() {
     }
     if (action === 'convert-to-pdf' || action === 'convert-media') {
       setPreselectedFileId(file.id);
-      setActiveCategory(action === 'convert-to-pdf' ? 'pdf' : 'media');
+      selectTab(action === 'convert-to-pdf' ? 'convert' : 'media');
       setTimeout(() => {
         const elem = document.getElementById('adobe-tools-grid') || document.getElementById('all-converters-grid');
         if (elem) elem.scrollIntoView({ behavior: 'smooth' });
       }, 50);
       return;
     }
+    if (action === 'compress' || action === 'compress-pdf') {
+      if (file.category === 'pdf') {
+        setActiveCompressPdf(file.file);
+        return;
+      }
+    }
     if (action === 'compress-image' || action === 'compress-media') {
       setPreselectedFileId(file.id);
-      setActiveCategory('compressor');
+      selectTab('compress');
       setTimeout(() => {
         const elem = document.getElementById('adobe-tools-grid');
         if (elem) elem.scrollIntoView({ behavior: 'smooth' });
@@ -127,109 +147,58 @@ export default function StudioHomePage() {
     setTimeout(() => setActiveNotice(null), 5000);
   };
 
-  const handleSelectTool = (toolId: ToolActionId) => {
+  const handleSelectTool = (toolId: any, explicitFile?: File) => {
+    const fileToUse = explicitFile || stagedFiles.find((f) => f.category === 'pdf')?.file || stagedFiles[0]?.file;
+
     if (toolId === 'all-tools') {
-      setActiveCategory('pdf');
+      selectTab('convert');
       setTimeout(() => {
         const elem = document.getElementById('all-converters-grid') || document.getElementById('adobe-tools-grid');
-        if (elem) {
-          elem.scrollIntoView({ behavior: 'smooth' });
-        }
+        if (elem) elem.scrollIntoView({ behavior: 'smooth' });
       }, 50);
       return;
     }
 
     if (toolId === 'edit-pdf') {
-      const pdfFile = stagedFiles.find((f) => f.category === 'pdf');
-      if (pdfFile) {
-        setActiveEditingPdf(pdfFile.file);
+      if (fileToUse) {
+        setActiveEditingPdf(fileToUse);
       } else {
-        setActiveCategory('pdf');
-        setActiveNotice('Please drag & drop or choose a PDF document above to launch the in-place editor.');
+        selectTab('edit');
+        setActiveNotice('Please choose or drop a PDF document above to launch the editor.');
         setTimeout(() => setActiveNotice(null), 5000);
       }
       return;
     }
 
     if (
-      toolId === 'merge-pdf' ||
-      toolId === 'split-pdf' ||
-      toolId === 'rotate-pdf' ||
-      toolId === 'crop-pdf' ||
-      toolId === 'delete-pages' ||
-      toolId === 'reorder-pages' ||
-      toolId === 'extract-pages' ||
-      toolId === 'insert-pages' ||
-      toolId === 'number-pages' ||
-      toolId === 'fill-sign' ||
-      toolId === 'request-signatures' ||
-      toolId === 'protect-pdf' ||
-      toolId === 'add-watermark' ||
-      toolId === 'remove-watermark' ||
-      toolId === 'remove-watermark-pdf'
+      toolId === 'compress-pdf' ||
+      (typeof toolId === 'string' && toolId.startsWith('compress') && fileToUse && fileToUse.name.toLowerCase().endsWith('.pdf'))
     ) {
-      setActiveCategory('pdf');
-      setTimeout(() => {
-        const elem = document.getElementById('adobe-tools-grid');
-        if (elem) {
-          elem.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 50);
+      if (fileToUse) {
+        setActiveCompressPdf(fileToUse);
+      } else {
+        selectTab('compress');
+        setActiveNotice('Please choose or drop a PDF file above to compress.');
+        setTimeout(() => setActiveNotice(null), 5000);
+      }
       return;
     }
 
-    if (
-      toolId === 'images-to-pdf' ||
-      toolId === 'pdf-to-images' ||
-      toolId === 'pdf-to-svg' ||
-      toolId === 'convert-audio' ||
-      toolId === 'convert-video' ||
-      toolId === 'image-converter' ||
-      toolId === 'video-to-audio' ||
-      toolId === 'remove-watermark-video' ||
-      toolId === 'remove-watermark-image'
-    ) {
-      const candidate = stagedFiles.find((f) => {
-        if (toolId === 'images-to-pdf') return f.category === 'image';
-        if (toolId === 'pdf-to-images' || toolId === 'pdf-to-svg') return f.category === 'pdf';
-        if (toolId === 'convert-audio') return f.category === 'audio';
-        if (toolId === 'convert-video' || toolId === 'remove-watermark-video') return f.category === 'video';
-        if (toolId === 'image-converter' || toolId === 'remove-watermark-image') return f.category === 'image';
-        if (toolId === 'video-to-audio') return f.category === 'video';
-        return false;
-      });
-      if (candidate) {
-        setPreselectedFileId(candidate.id);
-      }
-      setActiveCategory(toolId === 'images-to-pdf' || toolId === 'pdf-to-images' || toolId === 'pdf-to-svg' ? 'pdf' : 'media');
-      setTimeout(() => {
-        const elem = document.getElementById('adobe-tools-grid');
-        if (elem) {
-          elem.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 50);
-      return;
+    // Trigger tool modal with file preloaded
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('creed-open-tool', {
+          detail: { toolId, category: activeTab, file: fileToUse },
+        })
+      );
     }
 
-    if (toolId.startsWith('compress')) {
-      const candidate = stagedFiles.find((f) => {
-        if (toolId === 'compress-image') return f.category === 'image';
-        if (toolId === 'compress-video') return f.category === 'video';
-        if (toolId === 'compress-audio') return f.category === 'audio';
-        return f.category !== 'pdf';
-      });
-      if (candidate) {
-        setPreselectedFileId(candidate.id);
+    setTimeout(() => {
+      const elem = document.getElementById('adobe-tools-grid');
+      if (elem) {
+        elem.scrollIntoView({ behavior: 'smooth' });
       }
-      setActiveCategory('compressor');
-      setTimeout(() => {
-        const elem = document.getElementById('adobe-tools-grid');
-        if (elem) {
-          elem.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 50);
-      return;
-    }
+    }, 50);
   };
 
   if (activeEditingPdf) {
@@ -243,11 +212,51 @@ export default function StudioHomePage() {
 
   return (
     <main style={{ flex: 1, padding: '0 32px 80px 32px' }}>
-      {/* Studio Workspace Mode Selector */}
+      {/* Floating Auto-Recovery Banner */}
+      {recoverableData && !bannerDismissed && stagedFiles.length === 0 && (
+        <AutoRecoveryBanner
+          count={recoverableData.files.length}
+          lastSavedAt={recoverableData.savedAt}
+          onRestore={handleRestoreSession}
+          onClear={handleClearAll}
+          onDismiss={() => setBannerDismissed(true)}
+        />
+      )}
+
+      {/* Transient Notice Toast */}
+      {activeNotice && (
+        <div style={{
+          maxWidth: '1140px',
+          margin: '20px auto 0 auto',
+          padding: '12px 20px',
+          backgroundColor: '#f0fdf4',
+          border: '1px solid #bbf7d0',
+          borderRadius: '8px',
+          color: '#166534',
+          fontSize: '14px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        }}>
+          <Sparkles size={18} />
+          {activeNotice}
+        </div>
+      )}
+
+      {/* Smallpdf Style Dynamic Hero Dropzone (Top-most hero) */}
+      <DynamicHeroDropzone
+        onFilesSelected={handleFilesSelected}
+        onSelectTool={handleSelectTool}
+        onOpenEditor={(file) => setActiveEditingPdf(file)}
+      />
+
+      {/* Studio Workspace Category Navigation */}
       <div
         style={{
           maxWidth: '1140px',
-          margin: '24px auto 0 auto',
+          margin: '40px auto 0 auto',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -255,84 +264,41 @@ export default function StudioHomePage() {
           gap: '12px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={() => setActiveCategory('pdf')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 inline-flex items-center gap-1.5 ${
-              activeCategory === 'pdf'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-white/80 text-slate-600 hover:bg-slate-100'
-            }`}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 700,
-              border: activeCategory === 'pdf' ? '1px solid #0f172a' : '1px solid #e2e8f0',
-              backgroundColor: activeCategory === 'pdf' ? '#0f172a' : 'rgba(255, 255, 255, 0.8)',
-              color: activeCategory === 'pdf' ? '#ffffff' : '#475569',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: activeCategory === 'pdf' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}
-          >
-            <LayoutGrid size={15} /> PDF Solutions
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveCategory('media')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 inline-flex items-center gap-1.5 ${
-              activeCategory === 'media'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-white/80 text-slate-600 hover:bg-slate-100'
-            }`}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 700,
-              border: activeCategory === 'media' ? '1px solid #0f172a' : '1px solid #e2e8f0',
-              backgroundColor: activeCategory === 'media' ? '#0f172a' : 'rgba(255, 255, 255, 0.8)',
-              color: activeCategory === 'media' ? '#ffffff' : '#475569',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: activeCategory === 'media' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}
-          >
-            <FolderUp size={15} /> Media Engine
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveCategory('compressor')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 inline-flex items-center gap-1.5 ${
-              activeCategory === 'compressor'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-white/80 text-slate-600 hover:bg-slate-100'
-            }`}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 700,
-              border: activeCategory === 'compressor' ? '1px solid #0f172a' : '1px solid #e2e8f0',
-              backgroundColor: activeCategory === 'compressor' ? '#0f172a' : 'rgba(255, 255, 255, 0.8)',
-              color: activeCategory === 'compressor' ? '#ffffff' : '#475569',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: activeCategory === 'compressor' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}
-          >
-            <Sparkles size={15} /> Smart Compressor
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {[
+            { id: 'convert', label: 'PDF Converters', icon: <FolderUp size={15} /> },
+            { id: 'compress', label: 'Compress', icon: <TrendingDown size={15} /> },
+            { id: 'merge', label: 'Merge & Organize', icon: <Layers size={15} /> },
+            { id: 'edit', label: 'Edit PDF', icon: <FileText size={15} /> },
+            { id: 'sign', label: 'Sign & Protect', icon: <ShieldCheck size={15} /> },
+            { id: 'media', label: 'Media Engine', icon: <Video size={15} /> },
+          ].map((item) => {
+            const isSelected = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => selectTab(item.id as HeroTabId)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  border: isSelected ? '1px solid #0f172a' : '1px solid #e2e8f0',
+                  backgroundColor: isSelected ? '#0f172a' : 'rgba(255, 255, 255, 0.8)',
+                  color: isSelected ? '#ffffff' : '#475569',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: isSelected ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {item.icon} {item.label}
+              </button>
+            );
+          })}
         </div>
 
         {stagedFiles.length > 0 && (
@@ -351,64 +317,6 @@ export default function StudioHomePage() {
           </div>
         )}
       </div>
-        {/* Floating Auto-Recovery Banner */}
-        {recoverableData && !bannerDismissed && stagedFiles.length === 0 && (
-          <AutoRecoveryBanner
-            count={recoverableData.files.length}
-            lastSavedAt={recoverableData.savedAt}
-            onRestore={handleRestoreSession}
-            onClear={handleClearAll}
-            onDismiss={() => setBannerDismissed(true)}
-          />
-        )}
-
-        {/* Transient Notice Toast */}
-        {activeNotice && (
-          <div style={{
-            maxWidth: '1140px',
-            margin: '20px auto 0 auto',
-            padding: '12px 20px',
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            borderRadius: '8px',
-            color: '#166534',
-            fontSize: '14px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-          }}>
-            <Sparkles size={18} />
-            {activeNotice}
-          </div>
-        )}
-
-        {/* Adobe Acrobat Online Hero Banner (Creed-Tech Branded) */}
-        <section style={{ maxWidth: '1140px', margin: '48px auto 20px auto', textAlign: 'center' }}>
-          <h2 style={{
-            fontSize: '38px',
-            fontWeight: 800,
-            color: '#0f172a',
-            letterSpacing: '-0.035em',
-            lineHeight: 1.2,
-            marginBottom: '14px',
-          }}>
-            Do your best work online with Creed-Tech Studio
-          </h2>
-          <p style={{
-            fontSize: '17px',
-            color: '#475569',
-            maxWidth: '720px',
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}>
-            Instant in-place PDF editing, universal media conversion, and lossless compression without registration. 100% stateless and private.
-          </p>
-        </section>
-
-        {/* Drag & Drop Staging Launcher */}
-        <DragDropZone onFilesSelected={handleFilesSelected} />
 
         {/* Staged Files Workspace Section */}
         {stagedFiles.length > 0 && (
@@ -465,14 +373,35 @@ export default function StudioHomePage() {
         )}
 
         {/* 23 Adobe Acrobat Online Converters (Creed-Tech) */}
-        {activeCategory === 'pdf' && <AllConvertersGrid />}
+        {(activeTab === 'convert' || activeTab === 'office') && <AllConvertersGrid />}
 
         {/* Adobe-Style Categorized Tools Grid */}
         <ToolsGrid
-          categoryFilter={activeCategory}
+          categoryFilter={
+            activeTab === 'convert' || activeTab === 'office'
+              ? 'convert'
+              : activeTab === 'compress'
+              ? 'compress'
+              : activeTab === 'merge'
+              ? 'merge'
+              : activeTab === 'edit'
+              ? 'edit'
+              : activeTab === 'sign'
+              ? 'sign'
+              : activeTab === 'media'
+              ? 'media'
+              : 'all'
+          }
           onSelectTool={handleSelectTool}
           onOpenEditor={(file) => setActiveEditingPdf(file)}
-          stagedPdfFile={stagedFiles.find((f) => f.category === 'pdf')?.file || null}
+          stagedPdfFile={stagedFiles.find((f) => f.category === 'pdf')?.file || stagedFiles[0]?.file || null}
+        />
+
+        {/* Global Compress PDF Modal with Basic vs Strong Options */}
+        <CompressPdfModal
+          isOpen={!!activeCompressPdf}
+          file={activeCompressPdf}
+          onClose={() => setActiveCompressPdf(null)}
         />
       </main>
   );

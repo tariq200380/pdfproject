@@ -554,11 +554,13 @@ const SECTIONS_DATA: {
   },
 ];
 
+export type ToolsGridFilter = 'all' | 'pdf' | 'convert' | 'compress' | 'merge' | 'edit' | 'sign' | 'media' | 'compressor' | 'office';
+
 interface ToolsGridProps {
   onSelectTool?: (toolId: ToolActionId) => void;
   onOpenEditor?: (file: File) => void;
   stagedPdfFile?: File | null;
-  categoryFilter?: 'pdf' | 'media' | 'compressor';
+  categoryFilter?: ToolsGridFilter;
 }
 
 export const ToolsGrid: React.FC<ToolsGridProps> = ({
@@ -616,52 +618,10 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Filter sections and tools based on categoryFilter and search
-  const matchesCategoryFilter = (toolId: ToolActionId, filter: 'pdf' | 'media' | 'compressor'): boolean => {
-    if (filter === 'pdf') {
-      return (
-        toolId === 'edit-pdf' ||
-        toolId === 'merge-pdf' ||
-        toolId === 'split-pdf' ||
-        toolId === 'rotate-pdf' ||
-        toolId === 'crop-pdf' ||
-        toolId === 'delete-pages' ||
-        toolId === 'reorder-pages' ||
-        toolId === 'extract-pages' ||
-        toolId === 'insert-pages' ||
-        toolId === 'number-pages' ||
-        toolId === 'fill-sign' ||
-        toolId === 'request-signatures' ||
-        toolId === 'protect-pdf' ||
-        toolId === 'add-watermark' ||
-        toolId === 'remove-watermark' ||
-        toolId === 'remove-watermark-pdf' ||
-        toolId === 'pdf-to-images' ||
-        toolId === 'images-to-pdf' ||
-        toolId === 'summarize-doc' ||
-        toolId === 'translate-doc' ||
-        toolId === 'pdf-to-markdown' ||
-        toolId === 'scan-to-pdf' ||
-        toolId === 'ocr-pdf' ||
-        toolId === 'html-to-pdf' ||
-        toolId === 'pdf-to-pdfa' ||
-        toolId === 'pdf-forms' ||
-        toolId === 'unlock-pdf' ||
-        toolId === 'redact-pdf' ||
-        toolId === 'compare-pdf'
-      );
-    }
-    if (filter === 'media') {
-      return (
-        toolId === 'convert-video' ||
-        toolId === 'convert-audio' ||
-        toolId === 'image-converter' ||
-        toolId === 'video-to-audio' ||
-        toolId === 'remove-watermark' ||
-        toolId === 'remove-watermark-video' ||
-        toolId === 'remove-watermark-image'
-      );
-    }
-    if (filter === 'compressor') {
+  const matchesCategoryFilter = (toolId: ToolActionId, filter: ToolsGridFilter): boolean => {
+    if (filter === 'all') return true;
+
+    if (filter === 'compress' || filter === 'compressor') {
       return (
         toolId === 'compress-pdf' ||
         toolId === 'compress-video' ||
@@ -670,6 +630,80 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
         toolId === 'ocr-pdf'
       );
     }
+
+    if (filter === 'convert' || filter === 'office') {
+      return (
+        toolId.includes('word') ||
+        toolId.includes('excel') ||
+        toolId.includes('ppt') ||
+        toolId.includes('jpg') ||
+        toolId.includes('images-to-pdf') ||
+        toolId.includes('pdf-to-images') ||
+        toolId.includes('pdf-to-svg') ||
+        toolId.includes('html-to-pdf') ||
+        toolId.includes('pdf-to-pdfa') ||
+        toolId === 'ocr-pdf' ||
+        toolId === 'scan-to-pdf'
+      );
+    }
+
+    if (filter === 'merge') {
+      return (
+        toolId === 'merge-pdf' ||
+        toolId === 'split-pdf' ||
+        toolId === 'rotate-pdf' ||
+        toolId === 'delete-pages' ||
+        toolId === 'reorder-pages' ||
+        toolId === 'extract-pages' ||
+        toolId === 'insert-pages' ||
+        toolId === 'crop-pdf' ||
+        toolId === 'number-pages'
+      );
+    }
+
+    if (filter === 'edit') {
+      return (
+        toolId === 'edit-pdf' ||
+        toolId === 'crop-pdf' ||
+        toolId === 'number-pages' ||
+        toolId === 'add-watermark' ||
+        toolId === 'remove-watermark' ||
+        toolId === 'remove-watermark-pdf' ||
+        toolId === 'pdf-forms' ||
+        toolId === 'redact-pdf' ||
+        toolId === 'scan-to-pdf'
+      );
+    }
+
+    if (filter === 'sign') {
+      return (
+        toolId === 'fill-sign' ||
+        toolId === 'request-signatures' ||
+        toolId === 'protect-pdf' ||
+        toolId === 'unlock-pdf' ||
+        toolId === 'pdf-forms'
+      );
+    }
+
+    if (filter === 'media') {
+      return (
+        toolId === 'convert-video' ||
+        toolId === 'convert-audio' ||
+        toolId === 'image-converter' ||
+        toolId === 'video-to-audio' ||
+        toolId === 'remove-watermark' ||
+        toolId === 'remove-watermark-video' ||
+        toolId === 'remove-watermark-image' ||
+        toolId === 'compress-video' ||
+        toolId === 'compress-audio' ||
+        toolId === 'compress-image'
+      );
+    }
+
+    if (filter === 'pdf') {
+      return true;
+    }
+
     return true;
   };
 
@@ -786,34 +820,27 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     return 'Supports standard PDF documents (.pdf)';
   };
 
-  const handleCardClick = (tool: ToolItem) => {
+  const handleCardClick = (tool: ToolItem, overrideFile?: File) => {
     // If it is an intelligence tool, launch DocumentIntelligenceModal
     if (tool.id === 'summarize-doc' || tool.id === 'translate-doc' || tool.id === 'pdf-to-markdown') {
       const tab: IntelligenceTab =
         tool.id === 'translate-doc' ? 'translate' : tool.id === 'pdf-to-markdown' ? 'markdown' : 'summarize';
       setIntelligenceInitialTab(tab);
-      setIntelligenceFile(stagedPdfFile || null);
+      setIntelligenceFile(overrideFile || stagedPdfFile || null);
       setIntelligenceModalOpen(true);
       return;
     }
 
-    // If it is Edit PDF and staged file exists, launch editor directly
-    if (tool.id === 'edit-pdf' && stagedPdfFile && onOpenEditor) {
-      onOpenEditor(stagedPdfFile);
+    // If it is Edit PDF and staged/override file exists, launch editor directly
+    const fileToUse = overrideFile || stagedPdfFile;
+    if (tool.id === 'edit-pdf' && fileToUse && onOpenEditor) {
+      onOpenEditor(fileToUse);
       return;
     }
 
     // Open focused interactive modal in-place for all tools without jumping or tab-switching
     setActiveModalTool(tool);
-    setModalFiles(
-      stagedPdfFile &&
-      tool.section !== 'convert' &&
-      tool.id !== 'remove-watermark' &&
-      tool.id !== 'remove-watermark-video' &&
-      tool.id !== 'remove-watermark-image'
-        ? [stagedPdfFile]
-        : []
-    );
+    setModalFiles(fileToUse ? [fileToUse] : []);
     setIsProcessing(false);
     setProgress(0);
     setProgressStage('idle');
@@ -824,7 +851,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
     setHasDrawnSignature(false);
 
     // Initialize smart default target format
-    const initialFile = stagedPdfFile && tool.section !== 'convert' ? stagedPdfFile : null;
+    const initialFile = fileToUse && tool.section !== 'convert' ? fileToUse : null;
     const initialExt = initialFile?.name.split('.').pop()?.toLowerCase() || '';
     if (tool.id === 'convert-audio' || tool.id === 'video-to-audio') {
       setTargetFormat(initialExt === 'mp3' ? 'wav' : 'mp3');
@@ -851,16 +878,24 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
   // Listen for navigation tool triggers from global header dropdowns
   useEffect(() => {
     const handleOpenToolEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<{ toolId: string }>;
-      const targetId = customEvent.detail?.toolId;
+      const customEvent = e as CustomEvent<{ toolId: string; file?: File }>;
+      let targetId = customEvent.detail?.toolId;
+      const targetFile = customEvent.detail?.file;
       if (!targetId) return;
 
-      if (targetId === 'summarize-doc' || targetId === 'translate-doc' || targetId === 'pdf-to-markdown') {
+      if (
+        targetId === 'summarize-doc' ||
+        targetId === 'translate-doc' ||
+        targetId === 'pdf-to-markdown' ||
+        targetId === 'ai-pdf-assistant' ||
+        targetId === 'chat-pdf' ||
+        targetId === 'ai-pdf-summarizer' ||
+        targetId === 'ai-question-generator'
+      ) {
         const tab: IntelligenceTab =
           targetId === 'translate-doc' ? 'translate' : targetId === 'pdf-to-markdown' ? 'markdown' : 'summarize';
         setIntelligenceInitialTab(tab);
-        const customFile = (customEvent.detail as any)?.file;
-        setIntelligenceFile(customFile || stagedPdfFile || null);
+        setIntelligenceFile(targetFile || stagedPdfFile || null);
         setIntelligenceModalOpen(true);
         return;
       }
@@ -870,12 +905,22 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
       let foundTool = allTools.find((t) => t.id === targetId);
 
       // Map alias IDs if needed
-      if (!foundTool && (targetId === 'watermark-pdf' || targetId === 'remove-watermark')) {
-        foundTool = allTools.find((t) => t.id === 'remove-watermark-pdf' || t.id === 'add-watermark');
+      if (!foundTool) {
+        if (targetId === 'watermark-pdf' || targetId === 'remove-watermark') {
+          foundTool = allTools.find((t) => t.id === 'remove-watermark-pdf' || t.id === 'add-watermark');
+        } else if (targetId === 'pdf-annotator' || targetId === 'pdf-reader') {
+          foundTool = allTools.find((t) => t.id === 'edit-pdf');
+        } else if (targetId === 'flatten-pdf') {
+          foundTool = allTools.find((t) => t.id === 'pdf-forms' || t.id === 'protect-pdf');
+        } else if (targetId === 'pdf-scanner') {
+          foundTool = allTools.find((t) => t.id === 'scan-to-pdf');
+        } else if (targetId === 'share-pdf') {
+          foundTool = allTools.find((t) => t.id === 'compare-pdf');
+        }
       }
 
       if (foundTool) {
-        handleCardClick(foundTool);
+        handleCardClick(foundTool, targetFile);
         const elem = document.getElementById('adobe-tools-grid');
         if (elem) {
           elem.scrollIntoView({ behavior: 'smooth' });
@@ -1787,17 +1832,7 @@ export const ToolsGrid: React.FC<ToolsGridProps> = ({
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept={
-                        activeModalTool.id === 'remove-watermark-pdf'
-                          ? '.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt'
-                          : activeModalTool.id === 'remove-watermark-video'
-                          ? 'video/*,.mp4,.mov,.mkv,.webm,.avi,.flv,.wmv'
-                          : activeModalTool.id === 'remove-watermark-image'
-                          ? 'image/*,.png,.jpg,.jpeg,.webp,.bmp,.tiff'
-                          : activeModalTool.id === 'remove-watermark'
-                          ? '.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.webp,.mp4,.mov,.mkv,.webm,.avi,video/*,image/*'
-                          : undefined
-                      }
+                      accept="*/*"
                       multiple={
                         activeModalTool.id === 'merge-pdf' ||
                         activeModalTool.id === 'insert-pages' ||

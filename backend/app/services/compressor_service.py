@@ -41,6 +41,7 @@ class CompressorService:
     def compress_pdf(
         cls,
         input_path: Path,
+        preset: str = "basic",
         output_path: Optional[Path] = None,
     ) -> CompressionResult:
         """Compresses PDF documents using PyMuPDF stream deflation and garbage cleanup."""
@@ -50,7 +51,38 @@ class CompressorService:
         out_p.parent.mkdir(parents=True, exist_ok=True)
 
         doc = pymupdf.open(input_path)
-        doc.save(out_p, garbage=4, deflate=True, clean=True)
+        quality_val = 75
+        try:
+            quality_val = int(str(preset).strip())
+        except (ValueError, TypeError):
+            preset_lower = (preset or "").lower()
+            if preset_lower in ("strong", "max_compression"):
+                quality_val = 50
+            elif preset_lower in ("basic", "high_quality"):
+                quality_val = 80
+            elif preset_lower == "lossless":
+                quality_val = 95
+            else:
+                quality_val = 70
+
+        quality_val = max(15, min(95, quality_val))
+
+        for page in doc:
+            try:
+                for img in page.get_images(full=True):
+                    xref = img[0]
+                    try:
+                        pix = pymupdf.Pixmap(doc, xref)
+                        if pix.n >= 5:
+                            pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+                        jpg_bytes = pix.tobytes("jpeg", jpg_quality=quality_val)
+                        doc.update_stream(xref, jpg_bytes)
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        doc.save(out_p, garbage=4, deflate=True, clean=True, deflate_images=True, deflate_fonts=True)
         doc.close()
 
         comp_size = out_p.stat().st_size

@@ -165,29 +165,19 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
     return exts.slice(0, 6).join(', ') + (exts.length > 6 ? ', ...' : '');
   };
 
-  const handleOpenModal = (converter: ConverterConfig) => {
-    const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+  const handleOpenModal = (converter: ConverterConfig, initialFile?: File) => {
     setActiveConverter(converter);
-    setSelectedFiles([]);
+    setSelectedFiles(initialFile ? [initialFile] : []);
     setIsProcessing(false);
     setProgress(0);
     setProgressStage('idle');
     setErrorMessage(null);
     setDownloadResult(null);
     setTargetExtension(converter.id === 'universal-converter' ? 'pdf' : 'pdf');
-
-    if (typeof window !== 'undefined') {
-      window.requestAnimationFrame(() => {
-        if (window.scrollY !== currentScrollY) {
-          window.scrollTo({ top: currentScrollY, behavior: 'instant' });
-        }
-      });
-    }
   };
 
   const handleCloseModal = () => {
     if (isProcessing) return;
-    const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     setActiveConverter(null);
     setSelectedFiles([]);
     setErrorMessage(null);
@@ -197,28 +187,23 @@ export const AllConvertersGrid: React.FC<AllConvertersGridProps> = () => {
       if (window.location.search) {
         window.history.replaceState(null, '', window.location.pathname);
       }
-      window.requestAnimationFrame(() => {
-        if (window.scrollY !== currentScrollY) {
-          window.scrollTo({ top: currentScrollY, behavior: 'instant' });
-        }
-      });
     }
   };
 
   // Listen for navigation tool triggers from global header dropdowns
   React.useEffect(() => {
     const handleOpenToolEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<{ toolId: string }>;
-      const targetId = customEvent.detail?.toolId;
+      const customEvent = e as CustomEvent<{ toolId: string; file?: File }>;
+      let targetId = customEvent.detail?.toolId;
+      const targetFile = customEvent.detail?.file;
       if (!targetId) return;
+
+      if (targetId === 'pdf-converter') targetId = 'smart-pdf';
+      if (targetId === 'pdf-ocr') targetId = 'ocr-pdf';
 
       const found = ALL_23_CONVERTERS.find((c) => c.id === targetId);
       if (found) {
-        handleOpenModal(found);
-        const elem = document.getElementById('all-converters-grid');
-        if (elem) {
-          elem.scrollIntoView({ behavior: 'smooth' });
-        }
+        handleOpenModal(found, targetFile);
       }
     };
 

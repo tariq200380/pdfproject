@@ -54,8 +54,9 @@ def _build_compression_response(
 async def compress_pdf_endpoint(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
+    preset: str = Form("basic"),
 ):
-    """Compresses uploaded PDF document using PyMuPDF lossless optimization."""
+    """Compresses uploaded PDF document using PyMuPDF optimization presets."""
     session_id, session_dir = sandbox_manager.create_session()
     src_path = session_dir / "input.pdf"
     content = await file.read()
@@ -66,7 +67,7 @@ async def compress_pdf_endpoint(
     src_path.write_bytes(content)
     out_path = session_dir / "compressed.pdf"
     try:
-        result = compressor_service.compress_pdf(src_path, output_path=out_path)
+        result = compressor_service.compress_pdf(src_path, preset=preset, output_path=out_path)
     except Exception as e:
         sandbox_manager.cleanup_session(session_id)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"PDF compression failed: {e}")

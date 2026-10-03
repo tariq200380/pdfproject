@@ -14,6 +14,7 @@ from backend.app.api.routes_compress import router as compress_router
 from backend.app.api.routes_converters import router as converters_router
 from backend.app.api.routes_contact import router as contact_router
 from backend.app.api.routes_intelligence import router as intelligence_router
+from backend.app.api.routes_cloud import router as cloud_router
 from backend.app.core.database import init_db
 from backend.app.core.config import settings
 from backend.app.core.sandbox import sandbox_manager
@@ -87,6 +88,7 @@ app.include_router(compress_router, prefix=settings.API_PREFIX)
 app.include_router(converters_router, prefix=settings.API_PREFIX)
 app.include_router(contact_router, prefix=settings.API_PREFIX)
 app.include_router(intelligence_router, prefix=settings.API_PREFIX)
+app.include_router(cloud_router, prefix=settings.API_PREFIX)
 
 
 @app.get("/")

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { HeroTabProvider } from '@/context/HeroTabContext';
 
 export const metadata: Metadata = {
   title: 'Creed-Tech | PDF & Media Studio — Frictionless Document & Media Cloud',
@@ -16,11 +17,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <Header />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          {children}
-        </div>
-        <Footer />
+        <HeroTabProvider>
+          <Header />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {children}
+          </div>
+          <Footer />
+        </HeroTabProvider>
       </body>
     </html>
   );

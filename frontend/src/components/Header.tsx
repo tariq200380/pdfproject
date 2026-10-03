@@ -3,51 +3,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  ChevronDown,
-  FileText,
-  FileSpreadsheet,
-  Presentation,
-  Image as ImageIcon,
-  FileCode,
-  Video,
-  Music,
-  Scissors,
-  RotateCw,
-  Crop,
-  Copy,
-  ArrowUpDown,
-  ExternalLink,
-  Trash2,
-  PenTool,
-  Lock,
-  Sparkles,
-  Layers,
-  ArrowRight,
-  Languages,
-  Unlock,
-  EyeOff,
-  GitCompare,
-  Camera,
-  Globe,
-  FileSearch,
-  Archive,
-} from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { ToolsMegaMenu } from '@/components/adobe/ToolsMegaMenu';
+import { useHeroTab, HeroTabId } from '@/context/HeroTabContext';
 
-type DropdownType = 'convert' | 'edit' | 'sign-protect' | 'intelligence' | null;
+type DropdownType = 'tools' | null;
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { activeTab, selectTab } = useHeroTab();
   const [activeDropdown, setActiveDropdown] = useState<DropdownType>(null);
-  const navRef = useRef<HTMLDivElement>(null);
-
-  const isHome = pathname === '/';
+  const headerRef = useRef<HTMLElement>(null);
 
   // Close dropdown on outside click or escape key
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setActiveDropdown(null);
       }
     };
@@ -67,13 +39,99 @@ export const Header: React.FC = () => {
     };
   }, []);
 
-  // Handle tool click from dropdown
+  // Handle category click directly from navbar
+  const handleNavCategoryClick = (category: HeroTabId) => {
+    setActiveDropdown(null);
+    selectTab(category);
+
+    if (pathname !== '/') {
+      router.push(`/?category=${category}`);
+    }
+  };
+
+  // Handle tool click from dropdown or nav
   const handleToolClick = (toolId: string) => {
     setActiveDropdown(null);
 
+    // Map toolId to hero category
+    let category: HeroTabId | null = null;
+    if (
+      toolId.includes('video') ||
+      toolId.includes('audio') ||
+      toolId === 'image-converter' ||
+      toolId.includes('watermark-video') ||
+      toolId.includes('watermark-image') ||
+      toolId === 'media'
+    ) {
+      category = 'media';
+    } else if (
+      toolId.includes('word') ||
+      toolId.includes('excel') ||
+      toolId.includes('ppt') ||
+      toolId.includes('odt') ||
+      toolId.includes('ods') ||
+      toolId.includes('odp') ||
+      toolId.includes('hwp') ||
+      toolId.includes('html') ||
+      toolId.includes('epub') ||
+      toolId.includes('zip') ||
+      toolId.includes('csv') ||
+      toolId.includes('pages') ||
+      toolId.includes('pdfa') ||
+      toolId.includes('convert') ||
+      toolId.includes('jpg') ||
+      toolId.includes('png') ||
+      toolId.includes('text') ||
+      toolId.includes('rtf') ||
+      toolId.includes('image-to-pdf') ||
+      toolId === 'smart-pdf'
+    ) {
+      category = 'convert';
+    } else if (toolId.startsWith('compress')) {
+      category = 'compress';
+    } else if (
+      toolId.includes('merge') ||
+      toolId.includes('split') ||
+      toolId.includes('rotate') ||
+      toolId.includes('delete') ||
+      toolId.includes('extract') ||
+      toolId.includes('reorder') ||
+      toolId.includes('organize')
+    ) {
+      category = 'merge';
+    } else if (
+      toolId.includes('edit') ||
+      toolId.includes('crop') ||
+      toolId.includes('number') ||
+      toolId.includes('watermark') ||
+      toolId.includes('annotator') ||
+      toolId.includes('reader') ||
+      toolId.includes('redact') ||
+      toolId.includes('forms') ||
+      toolId.includes('share')
+    ) {
+      category = 'edit';
+    } else if (
+      toolId.includes('sign') ||
+      toolId.includes('protect') ||
+      toolId.includes('unlock') ||
+      toolId.includes('flatten') ||
+      toolId.includes('scanner')
+    ) {
+      category = 'sign';
+    }
+
+    if (category) {
+      selectTab(category);
+    }
+
     if (pathname === '/') {
-      // Dispatch event to active grids without dirtying the URL
       window.dispatchEvent(new CustomEvent('creed-open-tool', { detail: { toolId } }));
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tool', toolId);
+        window.history.pushState(null, '', url.pathname + url.search);
+      }
     } else {
       router.push(`/?tool=${encodeURIComponent(toolId)}`);
     }
@@ -85,859 +143,222 @@ export const Header: React.FC = () => {
 
   return (
     <header
+      ref={headerRef}
       style={{
         backgroundColor: '#ffffff',
-        borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+        borderBottom: '1px solid rgba(226, 232, 240, 0.9)',
         padding: '0 32px',
         height: '66px',
-        display: 'flex',
+        display: 'grid',
+        gridTemplateColumns: 'minmax(200px, 1fr) auto minmax(200px, 1fr)',
         alignItems: 'center',
-        justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
         zIndex: 100,
         boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.04)',
       }}
     >
-      {/* Brand Identity (Left) */}
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-        <span style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
-          Creed Tech
-        </span>
-        <span style={{ color: '#cbd5e1', fontWeight: 300, fontSize: '16px' }}>|</span>
-        <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>
-          Studio
-        </span>
-      </Link>
-
-      {/* Navigation Menu (Adobe Acrobat Style) */}
-      <div ref={navRef} style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
-        {/* Tools Link (Active link with solid active underline indicator) */}
+      {/* Left: Brand Identity */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
         <Link
           href="/"
-          className={`adobe-nav-item ${isHome ? 'active' : ''}`}
-          style={{ textDecoration: 'none' }}
           onClick={() => setActiveDropdown(null)}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
         >
-          Tools
+          {/* Logo Mark */}
+          <div
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '7px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '2.5px',
+              padding: '2.5px',
+              backgroundColor: '#f1f5f9',
+            }}
+          >
+            <div style={{ backgroundColor: '#ef4444', borderRadius: '2px' }} />
+            <div style={{ backgroundColor: '#3b82f6', borderRadius: '2px' }} />
+            <div style={{ backgroundColor: '#10b981', borderRadius: '2px' }} />
+            <div style={{ backgroundColor: '#f59e0b', borderRadius: '2px' }} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
+              Creed Tech
+            </span>
+            <span style={{ color: '#cbd5e1', fontWeight: 300, fontSize: '15px' }}>|</span>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>
+              Studio
+            </span>
+          </div>
         </Link>
-
-        {/* 1. Convert ▾ Mega Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            className={`adobe-nav-item ${activeDropdown === 'convert' ? 'active' : ''}`}
-            onClick={() => toggleDropdown('convert')}
-            aria-expanded={activeDropdown === 'convert'}
-          >
-            <span>Convert</span>
-            <ChevronDown
-              size={14}
-              style={{
-                transform: activeDropdown === 'convert' ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.15s ease',
-              }}
-            />
-          </button>
-
-          {activeDropdown === 'convert' && (
-            <div
-              className="adobe-mega-menu"
-              style={{
-                width: '780px',
-                left: '-120px',
-                padding: '24px',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '24px',
-              }}
-            >
-              {/* Column 1: Convert to PDF */}
-              <div>
-                <div
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    color: '#64748b',
-                    marginBottom: '12px',
-                    paddingLeft: '10px',
-                  }}
-                >
-                  Convert to PDF
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('word-to-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileText size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Word to PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>DOCX document format</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('image-to-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ImageIcon size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Image to PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Multi-image documents</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('text-to-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f1f5f9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileCode size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Text to PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Plain text and code files</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('excel-to-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileSpreadsheet size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Excel to PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>XLSX spreadsheet tables</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('ppt-to-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fff7ed', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Presentation size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PPT to PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>PowerPoint presentations</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('jpg-to-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#ecfeff', color: '#0891b2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ImageIcon size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>JPG/PNG to PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Raster graphic photos</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('html-to-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Globe size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>HTML to PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Clean HTML markup or URL</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('scan-to-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Camera size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Scan to PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Direct image / camera snapshot capture</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Column 2: Convert from PDF */}
-              <div>
-                <div
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    color: '#64748b',
-                    marginBottom: '12px',
-                    paddingLeft: '10px',
-                  }}
-                >
-                  Convert from PDF
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('pdf-to-word')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileText size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to Word</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Editable DOCX documents</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('pdf-to-excel')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileSpreadsheet size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to Excel</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Extract tables into XLSX</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('pdf-to-ppt')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fff7ed', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Presentation size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to PPT</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Slide presentations</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('pdf-to-jpg')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fff1f2', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ImageIcon size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to JPG</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>150 DPI page images</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('pdf-to-png')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f5f3ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ImageIcon size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to PNG</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Lossless raster graphics</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('pdf-to-pdfa')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#faf5ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Archive size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to PDF/A</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>ISO 19005 archival standard</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Column 3: Media & Universal Converters */}
-              <div>
-                <div
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    color: '#64748b',
-                    marginBottom: '12px',
-                    paddingLeft: '10px',
-                  }}
-                >
-                  Media & Universal
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('convert-video')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Video size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Video Converter</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>MP4, MKV, WebM, MOV</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('convert-audio')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#e0e7ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Music size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Audio Converter</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>MP3, WAV, AAC, FLAC</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('compress-image')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#ccfbf1', color: '#0f766e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ImageIcon size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Image Converter</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Universal raster & SVG</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('remove-watermark-video')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Video size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Remove Video Watermark</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>TikTok, Reels, Shorts (16:9 & 9:16)</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('remove-watermark-image')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <ImageIcon size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Remove Image Watermark</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>JPG, PNG, WebP AI inpainting</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('compress-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fee2e2', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileText size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Compress Media & Files</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Smart lossless compression</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToolClick('ocr-pdf')}
-                    className="adobe-mega-item"
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileSearch size={17} />
-                    </div>
-                    <div>
-                      <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>OCR PDF</div>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Extract searchable text layer</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 2. Edit ▾ Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            className={`adobe-nav-item ${activeDropdown === 'edit' ? 'active' : ''}`}
-            onClick={() => toggleDropdown('edit')}
-            aria-expanded={activeDropdown === 'edit'}
-          >
-            <span>Edit</span>
-            <ChevronDown
-              size={14}
-              style={{
-                transform: activeDropdown === 'edit' ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.15s ease',
-              }}
-            />
-          </button>
-
-          {activeDropdown === 'edit' && (
-            <div
-              className="adobe-mega-menu"
-              style={{
-                width: '340px',
-                left: '-40px',
-                padding: '20px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: '#64748b',
-                  marginBottom: '10px',
-                  paddingLeft: '10px',
-                }}
-              >
-                Edit PDF Tools
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('edit-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#fee2e2', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FileText size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Edit PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>In-place text editing & fonts</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('merge-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Copy size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Merge PDFs</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Combine multiple documents</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('split-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Scissors size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Split PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Separate into page ranges</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('crop-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#f5f3ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Crop size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Crop PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Trim page margins</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('rotate-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <RotateCw size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Rotate PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>90° / 180° page rotation</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('reorder-pages')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#e0e7ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <ArrowUpDown size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Reorder Pages</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Rearrange document sequence</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('extract-pages')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#f1f5f9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <ExternalLink size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Extract Pages</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Save select pages to new file</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('delete-pages')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Trash2 size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Delete Pages</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Remove unwanted pages</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('scan-to-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Camera size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Scan to PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Camera snapshot / photo capture</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('pdf-forms')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '30px', height: '30px', borderRadius: '6px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FileSearch size={16} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF Forms</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Inspect, populate & flatten</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 3. Sign & Protect ▾ Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            className={`adobe-nav-item ${activeDropdown === 'sign-protect' ? 'active' : ''}`}
-            onClick={() => toggleDropdown('sign-protect')}
-            aria-expanded={activeDropdown === 'sign-protect'}
-          >
-            <span>Sign & Protect</span>
-            <ChevronDown
-              size={14}
-              style={{
-                transform: activeDropdown === 'sign-protect' ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.15s ease',
-              }}
-            />
-          </button>
-
-          {activeDropdown === 'sign-protect' && (
-            <div
-              className="adobe-mega-menu"
-              style={{
-                width: '320px',
-                left: '-40px',
-                padding: '20px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: '#64748b',
-                  marginBottom: '10px',
-                  paddingLeft: '10px',
-                }}
-              >
-                Sign & Security
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('fill-sign')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <PenTool size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Fill & Sign</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Canvas signature & form filling</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('protect-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fee2e2', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Lock size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Protect PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>AES-256 password encryption</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('add-watermark')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Sparkles size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Add Watermark</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Stamp text watermark overlays</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('remove-watermark-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <EyeOff size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Remove PDF Watermark</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>PDF, Word, Excel & PowerPoint</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('unlock-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Unlock size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Unlock PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Remove password restrictions</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('redact-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fef2f2', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <EyeOff size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Redact PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Permanent black-box masking</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('compare-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#faf5ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <GitCompare size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Compare PDF</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Side-by-side visual diff</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 4. Document Intelligence ▾ Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            className={`adobe-nav-item ${activeDropdown === 'intelligence' ? 'active' : ''}`}
-            onClick={() => toggleDropdown('intelligence')}
-            aria-expanded={activeDropdown === 'intelligence'}
-          >
-            <Sparkles size={14} color="#2563eb" />
-            <span>Document Intelligence</span>
-            <ChevronDown
-              size={14}
-              style={{
-                transform: activeDropdown === 'intelligence' ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.15s ease',
-              }}
-            />
-          </button>
-
-          {activeDropdown === 'intelligence' && (
-            <div
-              className="adobe-mega-menu"
-              style={{
-                width: '340px',
-                left: '-80px',
-                padding: '20px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: '#64748b',
-                  marginBottom: '12px',
-                  paddingLeft: '10px',
-                }}
-              >
-                Intelligent Document Suite
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('summarize-doc')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Sparkles size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Document Summarizer</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Extractive key takeaways & overview</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('translate-doc')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Languages size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Document Translator</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>In-memory multi-language pipeline</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('pdf-to-markdown')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#faf5ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FileCode size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>PDF to Markdown</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Headings & table formatting to .md</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToolClick('ocr-pdf')}
-                  className="adobe-mega-item"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '7px', backgroundColor: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FileSearch size={17} />
-                  </div>
-                  <div>
-                    <div className="item-title" style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>OCR Text Extraction</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Searchable text layer via Tesseract</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Far Right Action Button: "Get in Touch" CTA */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      {/* Center: Centered Smallpdf Style Navigation */}
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+        {/* 1. Tools Mega Dropdown Button */}
+        <button
+          type="button"
+          id="tools-dropdown-btn"
+          onClick={() => toggleDropdown('tools')}
+          aria-expanded={activeDropdown === 'tools'}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '7px 14px',
+            borderRadius: '8px',
+            border: activeDropdown === 'tools' ? '1px solid #bfdbfe' : '1px solid transparent',
+            backgroundColor: activeDropdown === 'tools' ? '#eff6ff' : '#f8fafc',
+            color: activeDropdown === 'tools' ? '#2563eb' : '#0f172a',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: activeDropdown === 'tools' ? '0 1px 2px rgba(37, 99, 235, 0.08)' : 'none',
+          }}
+          onMouseEnter={(e) => {
+            if (activeDropdown !== 'tools') {
+              e.currentTarget.style.backgroundColor = '#eff6ff';
+              e.currentTarget.style.color = '#2563eb';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (activeDropdown !== 'tools') {
+              e.currentTarget.style.backgroundColor = '#f8fafc';
+              e.currentTarget.style.color = '#0f172a';
+            }
+          }}
+        >
+          {/* 3x3 App Grid Icon */}
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="3.5" height="3.5" rx="0.8" />
+            <rect x="6.25" y="1" width="3.5" height="3.5" rx="0.8" />
+            <rect x="11.5" y="1" width="3.5" height="3.5" rx="0.8" />
+            <rect x="1" y="6.25" width="3.5" height="3.5" rx="0.8" />
+            <rect x="6.25" y="6.25" width="3.5" height="3.5" rx="0.8" />
+            <rect x="11.5" y="6.25" width="3.5" height="3.5" rx="0.8" />
+            <rect x="1" y="11.5" width="3.5" height="3.5" rx="0.8" />
+            <rect x="6.25" y="11.5" width="3.5" height="3.5" rx="0.8" />
+            <rect x="11.5" y="11.5" width="3.5" height="3.5" rx="0.8" />
+          </svg>
+          <span>Tools</span>
+          <ChevronDown
+            size={14}
+            style={{
+              transform: activeDropdown === 'tools' ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.15s ease',
+            }}
+          />
+        </button>
+
+        {/* 2. Direct Quick Actions (Live switches Hero with dedicated color) */}
+        <button
+          type="button"
+          onClick={() => handleNavCategoryClick('compress')}
+          className={`adobe-nav-item ${activeTab === 'compress' ? 'active' : ''}`}
+          style={{
+            fontWeight: activeTab === 'compress' ? 700 : 500,
+            fontSize: '14px',
+            color: activeTab === 'compress' ? '#0f172a' : '#334155',
+            backgroundColor: activeTab === 'compress' ? '#f1f5f9' : 'transparent',
+          }}
+        >
+          Compress
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleNavCategoryClick('convert')}
+          className={`adobe-nav-item ${activeTab === 'convert' ? 'active' : ''}`}
+          style={{
+            fontWeight: activeTab === 'convert' ? 700 : 500,
+            fontSize: '14px',
+            color: activeTab === 'convert' ? '#0f172a' : '#334155',
+            backgroundColor: activeTab === 'convert' ? '#f1f5f9' : 'transparent',
+          }}
+        >
+          Convert
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleNavCategoryClick('merge')}
+          className={`adobe-nav-item ${activeTab === 'merge' ? 'active' : ''}`}
+          style={{
+            fontWeight: activeTab === 'merge' ? 700 : 500,
+            fontSize: '14px',
+            color: activeTab === 'merge' ? '#0f172a' : '#334155',
+            backgroundColor: activeTab === 'merge' ? '#f1f5f9' : 'transparent',
+          }}
+        >
+          Merge
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleNavCategoryClick('edit')}
+          className={`adobe-nav-item ${activeTab === 'edit' ? 'active' : ''}`}
+          style={{
+            fontWeight: activeTab === 'edit' ? 700 : 500,
+            fontSize: '14px',
+            color: activeTab === 'edit' ? '#0f172a' : '#334155',
+            backgroundColor: activeTab === 'edit' ? '#f1f5f9' : 'transparent',
+          }}
+        >
+          Edit
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleNavCategoryClick('sign')}
+          className={`adobe-nav-item ${activeTab === 'sign' ? 'active' : ''}`}
+          style={{
+            fontWeight: activeTab === 'sign' ? 700 : 500,
+            fontSize: '14px',
+            color: activeTab === 'sign' ? '#0f172a' : '#334155',
+            backgroundColor: activeTab === 'sign' ? '#f1f5f9' : 'transparent',
+          }}
+        >
+          Sign
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleNavCategoryClick('media')}
+          className={`adobe-nav-item ${activeTab === 'media' ? 'active' : ''}`}
+          style={{
+            fontWeight: activeTab === 'media' ? 700 : 500,
+            fontSize: '14px',
+            color: activeTab === 'media' ? '#0f172a' : '#334155',
+            backgroundColor: activeTab === 'media' ? '#f1f5f9' : 'transparent',
+          }}
+        >
+          Media
+        </button>
+      </nav>
+
+      {/* Far Right Action Buttons */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '14px' }}>
+        <Link
+          href="/security"
+          style={{
+            fontSize: '13.5px',
+            fontWeight: 500,
+            color: '#64748b',
+            textDecoration: 'none',
+            padding: '6px 10px',
+            borderRadius: '6px',
+            transition: 'color 0.12s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+        >
+          Security
+        </Link>
+
         <Link
           href="/contact"
           style={{
@@ -960,6 +381,14 @@ export const Header: React.FC = () => {
           Get in Touch
         </Link>
       </div>
+
+      {/* Tools Mega Menu Dropdown */}
+      {activeDropdown === 'tools' && (
+        <ToolsMegaMenu
+          onSelectTool={handleToolClick}
+          onClose={() => setActiveDropdown(null)}
+        />
+      )}
     </header>
   );
 };
